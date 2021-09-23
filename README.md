@@ -15,5 +15,5 @@ How to use:
 
 
 Implemented by: 
-Edgar Filipe Ferreira Duarte
+Edgar Filipe Ferreira Duarte |
 Rodrigo Francisco Ferreira
