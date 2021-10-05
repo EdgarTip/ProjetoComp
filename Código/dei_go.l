@@ -16,7 +16,7 @@ letters                         [a-zA-Z]
 "-"                                        {printf("MINUS\n");}
 "+"                                        {printf("PLUS\n");}
 .                                          {;}
-\n                                         {; }
+\n                                         {;}
 
 %%
 
