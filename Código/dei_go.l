@@ -1,5 +1,5 @@
 
-%X  STRING
+%X  STRING COMMENT
 
 id_characters                   [a-zA-Z0-9_]
 letters                         [a-zA-Z] 
@@ -16,6 +16,13 @@ numbers_Hexa                    [0-9ABCDEFabcdef]
 {numbers}+"."{numbers}+                     {printf("REALLIT\n");}
 
 \"                                          {BEGIN STRING;printf("STRLIT(");}
+"/""/".*                                    {;}
+"/""*"                                      {BEGIN COMMENT;}
+
+<COMMENT>"*""/"                             {BEGIN 0;}
+<COMMENT>EOF                                {;}     //TODO
+<COMMENT>[.\n]                              {;}
+
 
 "package"                                   {printf("PACKAGE\n");}
 "return"                                    {printf("RETURN\n");}
@@ -31,6 +38,26 @@ numbers_Hexa                    [0-9ABCDEFabcdef]
 "strconv.Atoi"                              {printf("PARSEINT\n");}
 "func"                                      {printf("FUNC\n");}
 "os.Args"                                   {printf("CMDARGS\n");}
+
+"break"                                     {printf("BREAK\n");}
+"default"                                   {printf("DEFAULT\n");}
+"interface"                                 {printf("INTERFACE\n");}
+"select"                                    {printf("SELECT\n");}
+"case"                                      {printf("CASE\n");}
+"defer"                                     {printf("DEFER\n");}
+"go"                                        {printf("GO\n");}
+"map"                                       {printf("MAP\n");}
+"struct"                                    {printf("STRUCT\n");}
+"chan"                                      {printf("CHAN\n");}
+"goto"                                      {printf("GOTO\n");}
+"switch"                                    {printf("SWITCH\n");}
+"const"                                     {printf("CONST\n");}
+"fallthrough"                               {printf("FALLTHROUGH\n");}
+"range"                                     {printf("RANGE\n");}
+"type"                                      {printf("TYPE\n");}
+"continue"                                  {printf("CONTINUE\n");}
+"import"                                    {printf("IMPORT\n");}
+
 
 "=="                                        {printf("EQ\n");}
 ">="                                        {printf("GQ\n");}
