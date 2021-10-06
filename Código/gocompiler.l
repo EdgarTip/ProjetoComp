@@ -14,9 +14,9 @@ illegal_octals                  [89a-zA-Z]
 
 %%
 
--?[1-9]{numbers}*                           {printf("INTLIT\n"); num_column += yyleng;}
-0[0-7]*                                     {printf("INTLIT\n"); num_column += yyleng;}
-0[xX]{numbers_Hexa}*                        {printf("INTLIT\n"); num_column += yyleng;}    
+[1-9]{numbers}*                           {printf("INTLIT(%s)\n", yytext); num_column += yyleng;}
+0[0-7]*                                     {printf("INTLIT(%s)\n", yytext); num_column += yyleng;}
+0[xX]{numbers_Hexa}*                        {printf("INTLIT(%s)\n", yytext); num_column += yyleng;}    
 
 0[0-7]*{illegal_octals}                     {num_column += yyleng; printf("Line %d, column %d: invalid octal constant (%c)\n", num_line, num_column, yytext[yyleng-1]); BEGIN OCTAL_ERROR; }
 
