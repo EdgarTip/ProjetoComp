@@ -27,8 +27,6 @@ illegal_octals                  [89a-zA-Z]
 "/""/".*                                    {num_column += yyleng;}
 "/""*"                                      {BEGIN COMMENT; num_column += yyleng;}
 
-\"                                          {BEGIN STRING;printf("STRLIT("); num_column += yyleng;}
-
 "package"                                   {printf("PACKAGE\n"); num_column += yyleng;}
 "return"                                    {printf("RETURN\n"); num_column += yyleng;}
 "else"                                      {printf("ELSE\n"); num_column += yyleng;}
@@ -91,10 +89,12 @@ illegal_octals                  [89a-zA-Z]
 
 [a-zA-Z]{id_characters}*                    {printf("ID(%s)\n", yytext); num_column += yyleng;}
 
+<<EOF>>                                     {return 0;}
 " "                                         {num_column++;}
 \r                                          {;}
 .                                           {printf("Line %d, collumn %d: illegal character (%c)\n", num_line, num_column, yytext[0]); num_column++;}
 \n                                          {num_line++; num_column = 1;}
+
 
 <STRING>"\""                                {BEGIN 0;printf(")\n"); num_column += yyleng;}
 <STRING>\\f                                 {printf("\f"); num_column += yyleng;}
@@ -116,7 +116,8 @@ illegal_octals                  [89a-zA-Z]
 <COMMENT>"*""/"                             {BEGIN 0;}
 <COMMENT>EOF                                {;}     //TODO
 <COMMENT>.                                  {num_column++;}
-<COMMENT>\n                                 {num_lines++; num_column = 1;}
+<COMMENT>\n                                 {num_line++; num_column = 1;}
+
 
 %%
 
