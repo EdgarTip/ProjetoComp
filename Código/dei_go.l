@@ -1,9 +1,10 @@
 
-%X  STRING OCTAL_ERROR
+%X  STRING OCTAL_ERROR COMMENT
 %{
     int num_line = 1;
     int num_column = 1;  
 %}
+
 
 id_characters                   [a-zA-Z0-9_]
 letters                         [a-zA-Z] 
@@ -13,16 +14,18 @@ illegal_octals                  [89a-zA-Z]
 
 %%
 
-0                                           {printf("INTLIT\n"); num_column += yyleng;}
 -?[1-9]{numbers}*                           {printf("INTLIT\n"); num_column += yyleng;}
-0[0-7]+                                     {printf("INTLIT\n"); num_column += yyleng;}
+0[0-7]*                                     {printf("INTLIT\n"); num_column += yyleng;}
 0[xX]{numbers_Hexa}*                        {printf("INTLIT\n"); num_column += yyleng;}    
 
 0[0-7]*{illegal_octals}                     {num_column += yyleng; printf("Line %d, column %d: invalid octal constant (%c)\n", num_line, num_column, yytext[yyleng-1]); BEGIN OCTAL_ERROR; }
 
-
 {numbers}+"."{numbers}*[eE][+-]{numbers}+   {printf("REALLIT\n"); num_column += yyleng;}
 {numbers}+"."{numbers}+                     {printf("REALLIT\n"); num_column += yyleng;}
+
+\"                                          {BEGIN STRING;printf("STRLIT("); num_column += yyleng;}
+"/""/".*                                    {num_column += yyleng;}
+"/""*"                                      {BEGIN COMMENT; num_column += yyleng;}
 
 \"                                          {BEGIN STRING;printf("STRLIT("); num_column += yyleng;}
 
@@ -40,6 +43,25 @@ illegal_octals                  [89a-zA-Z]
 "strconv.Atoi"                              {printf("PARSEINT\n"); num_column += yyleng;}
 "func"                                      {printf("FUNC\n"); num_column += yyleng;}
 "os.Args"                                   {printf("CMDARGS\n"); num_column += yyleng;}
+
+"break"                                     {printf("RESERVED\n"); num_column += yyleng;}
+"default"                                   {printf("RESERVED\n"); num_column += yyleng;}
+"interface"                                 {printf("RESERVED\n"); num_column += yyleng;}
+"select"                                    {printf("RESERVED\n"); num_column += yyleng;}
+"case"                                      {printf("RESERVED\n"); num_column += yyleng;}
+"defer"                                     {printf("RESERVED\n"); num_column += yyleng;}
+"go"                                        {printf("RESERVED\n"); num_column += yyleng;}
+"map"                                       {printf("RESERVED\n"); num_column += yyleng;}
+"struct"                                    {printf("RESERVED\n"); num_column += yyleng;}
+"chan"                                      {printf("RESERVED\n"); num_column += yyleng;}
+"goto"                                      {printf("RESERVED\n"); num_column += yyleng;}
+"switch"                                    {printf("RESERVED\n"); num_column += yyleng;}
+"const"                                     {printf("RESERVED\n"); num_column += yyleng;}
+"fallthrough"                               {printf("RESERVED\n"); num_column += yyleng;}
+"range"                                     {printf("RESERVED\n"); num_column += yyleng;}
+"type"                                      {printf("RESERVED\n"); num_column += yyleng;}
+"continue"                                  {printf("RESERVED\n"); num_column += yyleng;}
+"import"                                    {printf("RESERVED\n"); num_column += yyleng;}
 
 "=="                                        {printf("EQ\n"); num_column+=2;}
 ">="                                        {printf("GQ\n"); num_column+=2;}
@@ -69,13 +91,9 @@ illegal_octals                  [89a-zA-Z]
 
 [a-zA-Z]{id_characters}*                    {printf("ID(%s)\n", yytext); num_column += yyleng;}
 
-
-
-
-" "                                         {;}
+" "                                         {num_column++;}
 \r                                          {;}
 .                                           {printf("Line %d, collumn %d: illegal character (%c)\n", num_line, num_column, yytext[0]); num_column++;}
-
 \n                                          {num_line++; num_column = 1;}
 
 <STRING>"\""                                {BEGIN 0;printf(")\n"); num_column += yyleng;}
@@ -93,6 +111,13 @@ illegal_octals                  [89a-zA-Z]
 <OCTAL_ERROR>" "                                  {num_column++; BEGIN 0;} 
 <OCTAL_ERROR>\n                                   {num_column = 1; num_line++; BEGIN 0;} 
 <OCTAL_ERROR>.                                    {num_column++;}
+
+
+<COMMENT>"*""/"                             {BEGIN 0;}
+<COMMENT>EOF                                {;}     //TODO
+<COMMENT>.                                  {num_column++;}
+<COMMENT>\n                                 {num_lines++; num_column = 1;}
+
 %%
 
 int main()
