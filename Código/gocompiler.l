@@ -21,8 +21,8 @@ illegal_octals                  [89a-zA-Z]
 
 0[0-7]*{illegal_octals}                     {num_column += yyleng; printf("Line %d, column %d: invalid octal constant (%c)\n", num_line, num_column, yytext[yyleng-1]); BEGIN OCTAL_ERROR; }
 
-{numbers}+"."{numbers}*[eE][+-]{numbers}+   {if(check) printf("REALLIT\n"); num_column += yyleng;}
-{numbers}+"."{numbers}+                     {if(check) printf("REALLIT\n"); num_column += yyleng;}
+{numbers}+"."{numbers}*[eE][+-]{numbers}+   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng;}
+{numbers}+"."{numbers}+                     {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng;}
 
 \"                                          {BEGIN STRING;if(check) printf("STRLIT("); num_column += yyleng;}
 "/""/".*                                    {num_column += yyleng;}
@@ -43,24 +43,26 @@ illegal_octals                  [89a-zA-Z]
 "func"                                      {if(check) printf("FUNC\n"); num_column += yyleng;}
 "os.Args"                                   {if(check) printf("CMDARGS\n"); num_column += yyleng;}
 
-"break"                                     {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"default"                                   {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"interface"                                 {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"select"                                    {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"case"                                      {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"defer"                                     {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"go"                                        {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"map"                                       {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"struct"                                    {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"chan"                                      {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"goto"                                      {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"switch"                                    {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"const"                                     {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"fallthrough"                               {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"range"                                     {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"type"                                      {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"continue"                                  {if(check) printf("RESERVED\n"); num_column += yyleng;}
-"import"                                    {if(check) printf("RESERVED\n"); num_column += yyleng;}
+"break"                                     {if(check) printf("RESERVED(break)\n"); num_column += yyleng;}
+"default"                                   {if(check) printf("RESERVED(default)\n"); num_column += yyleng;}
+"interface"                                 {if(check) printf("RESERVED(interface)\n"); num_column += yyleng;}
+"select"                                    {if(check) printf("RESERVED(select)\n"); num_column += yyleng;}
+"case"                                      {if(check) printf("RESERVED(case)\n"); num_column += yyleng;}
+"defer"                                     {if(check) printf("RESERVED(defer)\n"); num_column += yyleng;}
+"go"                                        {if(check) printf("RESERVED(go)\n"); num_column += yyleng;}
+"map"                                       {if(check) printf("RESERVED(map)\n"); num_column += yyleng;}
+"struct"                                    {if(check) printf("RESERVED(struct)\n"); num_column += yyleng;}
+"chan"                                      {if(check) printf("RESERVED(chan)\n"); num_column += yyleng;}
+"goto"                                      {if(check) printf("RESERVED(goto)\n"); num_column += yyleng;}
+"switch"                                    {if(check) printf("RESERVED(switch)\n"); num_column += yyleng;}
+"const"                                     {if(check) printf("RESERVED(const)\n"); num_column += yyleng;}
+"fallthrough"                               {if(check) printf("RESERVED(fallthrough)\n"); num_column += yyleng;}
+"range"                                     {if(check) printf("RESERVED(range)\n"); num_column += yyleng;}
+"type"                                      {if(check) printf("RESERVED(type)\n"); num_column += yyleng;}
+"continue"                                  {if(check) printf("RESERVED(continue)\n"); num_column += yyleng;}
+"import"                                    {if(check) printf("RESERVED(import)\n"); num_column += yyleng;}
+"++"                                        {if(check) printf("RESERVED(--)\n"); num_column += yyleng;}
+"--"                                        {if(check) printf("RESERVED(--)\n"); num_column += yyleng;}
 
 "=="                                        {if(check) printf("EQ\n"); num_column+=2;}
 ">="                                        {if(check) printf("GQ\n"); num_column+=2;}
