@@ -60,21 +60,22 @@ letters                         [a-zA-Z]
 numbers                         [0-9]
 numbers_Hexa                    [0-9ABCDEFabcdef]
 illegal_octals                  [89a-zA-Z]
-legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""=""*""/""-""+"">""{""(""[""<""%""!""}"")""\]""\t"]*
+legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t""-"]*
 reserved                        "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"|"int64"|"float64"
 
 %%
 
 [1-9]{numbers}*                             {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-[1-9]{numbers}*[eE]{numbers}+               {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[0-7]*                                     {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[xX]{numbers_Hexa}*                        {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
 
 0[0-7{illegal_octals}]*                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
-{numbers}+"."{numbers}*[eE][+-]?{numbers}+   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-{numbers}+"."{numbers}+                     {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+{numbers}+"."({numbers}*?([eE][+-]?{numbers}+)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+"."{numbers}*([eE][+-]?{numbers}+)?        {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+[1-9]{numbers}*[eE][+-]?{numbers}+              {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+
 
 \"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng;}
 "/""/".*                                    {num_column += yyleng; last = 0;}
