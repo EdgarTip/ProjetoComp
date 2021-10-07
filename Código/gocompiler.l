@@ -1,10 +1,57 @@
   //Edgar Duarte 2019216077 Rodrigo Ferreira 2019220060
 %X  STRING COMMENT 
 %{
+    #include <stdlib.h>
+    
     int num_line = 1;
     int num_column = 1;  
     int check = 0;
     int last = 0;
+
+    char *ptr = NULL;
+
+    char string_error = 0;
+    int ini_str_line = 0;
+    int ini_str_column = 0;
+
+    int block = 256;
+    int counter = 0;
+
+    void checkBlock() {
+        if (counter == block) {
+            block *= 2;
+
+            void *new_ptr = realloc(ptr, block * sizeof(char));
+            if (new_ptr == NULL) {
+                exit(-1);
+            }
+            ptr = new_ptr;
+        }
+    }
+
+    void freeBlock() {
+        if (string_error) {
+            printf("Line %d, column %d: invalid escape sequence (\"%s\")\n", ini_str_line, ini_str_column, ptr); 
+            last = 0;
+        } else last = 1;
+
+        free(ptr); 
+        ptr = NULL;
+        block = 256;
+        counter = 0;
+    }
+
+    void initializeBlock() {
+        string_error = 0;
+        ini_str_line = num_line;
+        ini_str_column = num_column;
+        ptr = (char*)malloc(block*sizeof(char));
+        if (ptr == NULL) {
+                exit(-1);
+        }
+    }
+
+
 %}
 
 
@@ -28,7 +75,7 @@ legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""=""*"
 {numbers}+"."{numbers}*[eE][+-]{numbers}+   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 {numbers}+"."{numbers}+                     {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
-\"                                          {BEGIN STRING;if(check) printf("STRLIT("); num_column += yyleng;}
+\"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng;}
 "/""/".*                                    {num_column += yyleng; last = 0;}
 "/""*"                                      {BEGIN COMMENT; num_column += yyleng; last = 0;}
 
@@ -104,18 +151,25 @@ legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""=""*"
 \n                                          {num_line++; num_column = 1; if(last){ if(check) printf("SEMICOLON\n");} last = 0;}
 
 
-<STRING>"\""                                {BEGIN 0; if(check) printf(")\n"); num_column += yyleng; last = 1;}
-<STRING>\\f                                 {if(check) printf("\f"); num_column += yyleng;}
-<STRING>\\n                                 {if(check) printf("\n"); num_column += yyleng;}
-<STRING>\\r                                 {if(check) printf("\r"); num_column += yyleng;}
-<STRING>\\t                                 {if(check) printf("\t"); num_column += yyleng;}
-<STRING>\\                                  {if(check) printf("\\"); num_column += yyleng;}     
-<STRING>\\\"                                {if(check) printf("\""); num_column += yyleng;} 
-<STRING>\\[^fnrt]                           {num_column += yyleng++; printf("Line %d, column %d: invalid escape sequence (\\%c)\n", num_line, num_column, yytext[1]); last = 0;}
-<STRING>.                                   {if(check) ECHO; num_column += yyleng;}
-<STRING>\n                                  {printf("Line %d, column %d: unterminated string literal\n", num_line, num_column); num_line++; num_column = 1; last = 0; BEGIN 0;}         
+<STRING>"\""                                {BEGIN 0; if(check) {
+                                                        ptr[counter++] = '\0';
+                                                        printf("STRLIT(%s)\n", ptr);}
+                                                    freeBlock();
+                                                    num_column++;}
+<STRING>\\f                                 {if(check) ptr[counter++] = '\f'; checkBlock(); num_column++;}
+<STRING>\\n                                 {if(check) ptr[counter++] = '\n'; checkBlock(); num_column++;}
+<STRING>\\r                                 {if(check) ptr[counter++] = '\r'; checkBlock(); num_column++;}
+<STRING>\\t                                 {if(check) ptr[counter++] = '\t'; checkBlock(); num_column++;}
+<STRING>\\                                  {if(check) ptr[counter++] = '\\'; checkBlock(); num_column++;}     
+<STRING>\\\"                                {if(check) ptr[counter++] = '\"'; checkBlock(); num_column++;} 
+<STRING>\\[^fnrt]                           {num_column++; string_error = 1;}
+<STRING>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
+<STRING>\n                                  {printf("Line %d, column %d: unterminated string literal\n", num_line, num_column); 
+                                                num_line++; 
+                                                num_column = 1; 
+                                                freeBlock(); 
+                                                BEGIN 0; last = 0;}         
 
- 
 
 <COMMENT>"*""/"                             {BEGIN 0;}
 <COMMENT>EOF                                {;}     //TODO
