@@ -101,7 +101,7 @@ legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""=""*"
 \t                                          {;}
 \r                                          {;}
 {legal_after}                                 {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column += yyleng; last = 0;}
-\n                                          {num_line++; num_column = 1; if(last) printf("SEMICOLON\n"); last = 0;}
+\n                                          {num_line++; num_column = 1; if(last){ if(check) printf("SEMICOLON\n");} last = 0;}
 
 
 <STRING>"\""                                {BEGIN 0; if(check) printf(")\n"); num_column += yyleng; last = 1;}
