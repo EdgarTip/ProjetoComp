@@ -61,18 +61,19 @@ numbers                         [0-9]
 numbers_Hexa                    [0-9ABCDEFabcdef]
 illegal_octals                  [89a-zA-Z]
 legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""=""*""/""-""+"">""{""(""[""<""%""!""}"")""\]""\t"]*
-
+reserved                        "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"|"int64"|"float64"
 
 %%
 
 [1-9]{numbers}*                             {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+[1-9]{numbers}*[eE]{numbers}+               {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[0-7]*                                     {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-0[xX]{numbers_Hexa}*                        {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}    
+0[xX]{numbers_Hexa}*                        {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
 
 0[0-7{illegal_octals}]*                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
-{numbers}+"."{numbers}*[eE][+-]{numbers}+   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+{numbers}+"."{numbers}*[eE][+-]?{numbers}+   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 {numbers}+"."{numbers}+                     {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
 \"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng;}
@@ -94,26 +95,7 @@ legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""=""*"
 "func"                                      {if(check) printf("FUNC\n"); num_column += yyleng; last = 0;}
 "os.Args"                                   {if(check) printf("CMDARGS\n"); num_column += yyleng; last = 0;}
 
-"break"                                     {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"default"                                   {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"interface"                                 {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"select"                                    {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"case"                                      {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"defer"                                     {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"go"                                        {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"map"                                       {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"struct"                                    {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"chan"                                      {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"goto"                                      {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"switch"                                    {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"const"                                     {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"fallthrough"                               {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"range"                                     {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"type"                                      {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"continue"                                  {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"import"                                    {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"++"                                        {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
-"--"                                        {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
+{reserved}                                  {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
 
 "=="                                        {if(check) printf("EQ\n"); num_column+=2; last = 0;}
 ">="                                        {if(check) printf("GQ\n"); num_column+=2; last = 0;}
