@@ -60,7 +60,7 @@ letters                         [a-zA-Z]
 numbers                         [0-9]
 numbers_Hexa                    [0-9ABCDEFabcdef]
 illegal_octals                  [89a-zA-Z]
-legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t""-"]*
+legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""\-""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t"]*
 reserved                        "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"|"int64"|"float64"
 
 %%
