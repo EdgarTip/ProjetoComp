@@ -1,4 +1,4 @@
-  //Edgar Duarte 2019216077 Rodrigo Ferreira 2019220060
+  //Edgar Duarte 2019216077 Rodrigo Ferreira   2019220060 .
 %X  STRING COMMENT 
 %{
     #include <stdlib.h>
@@ -60,20 +60,20 @@ letters                         [a-zA-Z]
 numbers                         [0-9]
 numbers_Hexa                    [0-9ABCDEFabcdef]
 illegal_octals                  [89a-zA-Z]
-legal_after                     [^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""\-""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t"]*
-reserved                        "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"|"int64"|"float64"
+legal_after                     [a-zA-Z0-9]*[^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""\-""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t"]
+reserved                        "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"|"int64"|"float64"|"byte"|"complex64"|"complex128"|"error"|"int8"|"int16"|"int32"|"rune"|"uint"|"uint8"|"uint16"|"uint32"|"uint64"|"uintptr"|"true"|"false"|"iota"|"nil"|"append"|"cap"|"close"|"complex"|"copy"|"delete"|"imag"|"len"|"make"|"new"|"panic"|"print"|"println"|"real"|"recover"|"&"|"\|"|"^"|":"|"."|"..."
 
-%%
+%%  
 
-[1-9]{numbers}*                             {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-0[0-7]*                                     {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-0[xX]{numbers_Hexa}*                        {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
+[1-9]((_{numbers})|({numbers}))*            {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+0[oO]?((_)?[0-7])*[0-7]                          {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+0[xX]((_{numbers_Hexa}|{numbers_Hexa}))*  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
 
 0[0-7{illegal_octals}]*                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
 {numbers}+"."({numbers}*?([eE][+-]?{numbers}+)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-"."{numbers}*([eE][+-]?{numbers}+)?        {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+"."{numbers}+([eE][+-]?{numbers}+)?        {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 [1-9]{numbers}*[eE][+-]?{numbers}+              {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
 
@@ -99,7 +99,7 @@ reserved                        "break"|"default"|"interface"|"select"|"case"|"d
 {reserved}                                  {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
 
 "=="                                        {if(check) printf("EQ\n"); num_column+=2; last = 0;}
-">="                                        {if(check) printf("GQ\n"); num_column+=2; last = 0;}
+">="                                        {if(check) printf("GE\n"); num_column+=2; last = 0;}
 "<="                                        {if(check) printf("LE\n"); num_column+=2; last = 0;}
 "!="                                        {if(check) printf("NE\n"); num_column+=2; last = 0;}
 "&&"                                        {if(check) printf("AND\n"); num_column+=2; last = 0;}
@@ -124,7 +124,7 @@ reserved                        "break"|"default"|"interface"|"select"|"case"|"d
 ")"                                         {if(check) printf("RPAR\n"); num_column++; last = 1;}
 "]"                                         {if(check) printf("RSQ\n"); num_column++; last = 1;}
 
-[a-zA-Z]{id_characters}*                    {if(check) printf("ID(%s)\n", yytext); num_column += yyleng; last = 1;}
+[a-zA-Z_]{id_characters}*                    {if(check) printf("ID(%s)\n", yytext); num_column += yyleng; last = 1;}
 
 <<EOF>>                                     {return 0;}
 " "                                         {num_column++;}
@@ -168,6 +168,7 @@ int main(int argc, char* argv[])
             check = 1;
         }
     }
+
 yylex();
 return 0;
 }
