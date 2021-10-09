@@ -9,10 +9,10 @@
     int last = 0;
 
     char *ptr = NULL;
+    char *ptr_erro = NULL;
 
     char string_error = 0;
-    int ini_str_line = 0;
-    int ini_str_column = 0;
+    int str_column_eror = 0;
 
     int block = 256;
     int counter = 0;
@@ -31,7 +31,7 @@
 
     void freeBlock() {
         if (string_error) {
-            printf("Line %d, column %d: invalid escape sequence (\"%s\")\n", ini_str_line, ini_str_column, ptr); 
+            printf("Line %d, column %d: invalid escape sequence (\"\\%c\")\n", num_line, str_column_eror-1, *ptr_erro); 
             last = 0;
         } else last = 1;
 
@@ -43,8 +43,6 @@
 
     void initializeBlock() {
         string_error = 0;
-        ini_str_line = num_line;
-        ini_str_column = num_column;
         ptr = (char*)malloc(block*sizeof(char));
         if (ptr == NULL) {
                 exit(-1);
@@ -136,7 +134,7 @@ reserved                        "break"|"default"|"interface"|"select"|"case"|"d
 
 <STRING>"\""                                {BEGIN 0; if(check) {
                                                         ptr[counter++] = '\0';
-                                                        printf("STRLIT(%s)\n", ptr);}
+                                                        printf("STRLIT(\"%s\")\n", ptr);}
                                                     freeBlock();
                                                     num_column++;}
 <STRING>\\f                                 {if(check) ptr[counter++] = '\f'; checkBlock(); num_column++;}
@@ -145,7 +143,7 @@ reserved                        "break"|"default"|"interface"|"select"|"case"|"d
 <STRING>\\t                                 {if(check) ptr[counter++] = '\t'; checkBlock(); num_column++;}
 <STRING>\\                                  {if(check) ptr[counter++] = '\\'; checkBlock(); num_column++;}     
 <STRING>\\\"                                {if(check) ptr[counter++] = '\"'; checkBlock(); num_column++;} 
-<STRING>\\[^fnrt]                           {num_column++; string_error = 1;}
+<STRING>\\[^fnrt]                           {str_column_eror = num_column; ptr_erro = yytext + 1; num_column += yyleng; string_error = 1;}
 <STRING>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
 <STRING>\n                                  {printf("Line %d, column %d: unterminated string literal\n", num_line, num_column); 
                                                 num_line++; 
