@@ -141,7 +141,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 <STRING>\\n                                 {if(check) ptr[counter++] = '\n'; checkBlock(); num_column++;}
 <STRING>\\r                                 {if(check) ptr[counter++] = '\r'; checkBlock(); num_column++;}
 <STRING>\\t                                 {if(check) ptr[counter++] = '\t'; checkBlock(); num_column++;}
-<STRING>\\                                  {if(check) ptr[counter++] = '\\'; checkBlock(); num_column++;}     
+<STRING>"\\\\"                                  {if(check) ptr[counter++] = '\\'; checkBlock(); num_column++;}     
 <STRING>\\\"                                {if(check) ptr[counter++] = '\"'; checkBlock(); num_column++;} 
 <STRING>\\[^fnrt]                           {str_column_eror = num_column; ptr_erro = yytext + 1; num_column += yyleng; string_error = 1;}
 <STRING>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
