@@ -7,6 +7,7 @@
     int num_column = 1;  
     int check = 0;
     int last = 0;
+    int initial_line = 0;
 
     char *ptr = NULL;
 
@@ -61,7 +62,7 @@ numbers                         [0-9]
 numbers_Hexa                    [0-9ABCDEFabcdef]
 illegal_octals                  [89a-zA-Z]
 legal_after                     [a-zA-Z0-9]*[^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""\-""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t"]
-reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"|"int64"|"float64"|"byte"|"complex64"|"complex128"|"error"|"int8"|"int16"|"int32"|"rune"|"uint"|"uint8"|"uint16"|"uint32"|"uint64"|"uintptr"|"true"|"false"|"iota"|"nil"|"append"|"cap"|"close"|"complex"|"copy"|"delete"|"imag"|"len"|"make"|"new"|"panic"|"print"|"println"|"real"|"recover"|"&"|"\|"|"^"|":"|"."|"..."
+reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"|"int64"|"float64"|"byte"|"complex64"|"complex128"|"error"|"int8"|"int16"|"int32"|"rune"|"uint"|"uint8"|"uint16"|"uint32"|"uint64"|"uintptr"|"true"|"false"|"iota"|"nil"|"append"|"cap"|"close"|"complex"|"copy"|"delete"|"imag"|"len"|"make"|"new"|"panic"|"print"|"println"|"real"|"recover"
 
 %%
 0                                           {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
@@ -72,14 +73,14 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0[0-7{illegal_octals}]*                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
-{numbers}+"."({numbers}*?([eE][+-]?{numbers}+)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-"."{numbers}*([eE][+-]?{numbers}+)?        {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-[1-9]{numbers}*[eE][+-]?{numbers}+              {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+{numbers}((_)?{numbers})*"."({numbers}*?([eE][+-]?{numbers}((_)?{numbers})*)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+"."{numbers}+([eE][+-]?{numbers}+)?                 {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+[1-9]{numbers}*[eE][+-]?{numbers}+                  {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
 
 \"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng;}
 "/""/".*                                    {num_column += yyleng; last = 0;}
-"/""*"                                      {BEGIN COMMENT; num_column += yyleng; last = 0;}
+"/""*"                                      {BEGIN COMMENT; num_column += yyleng; initial_line = num_line; last = 0;}
 
 "package"                                   {if(check) printf("PACKAGE\n"); num_column += yyleng; last = 0;}
 "return"                                    {if(check) printf("RETURN\n"); num_column += yyleng; last = 1;}
@@ -126,17 +127,17 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 [a-zA-Z_]{id_characters}*                    {if(check) printf("ID(%s)\n", yytext); num_column += yyleng; last = 1;}
 
-<<EOF>>                                     {return 0;}
+
 " "                                         {num_column++;}
 \t                                          {;}
 \r                                          {;}
-{legal_after}                                 {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column += yyleng; last = 0;}
+.                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column += yyleng; last = 0;}
 \n                                          {num_line++; num_column = 1; if(last){ if(check) printf("SEMICOLON\n");} last = 0;}
 
 
 <STRING>"\""                                {BEGIN 0; if(check) {
                                                         ptr[counter++] = '\0';
-                                                        printf("STRLIT(%s)\n", ptr);}
+                                                        printf("STRLIT(\"%s\")\n", ptr);}
                                                     freeBlock();
                                                     num_column++;}
 <STRING>\\f                                 {if(check) ptr[counter++] = '\f'; checkBlock(); num_column++;}
@@ -147,7 +148,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 <STRING>\\\"                                {if(check) ptr[counter++] = '\"'; checkBlock(); num_column++;} 
 <STRING>\\[^fnrt]                           {num_column++; string_error = 1;}
 <STRING>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
-<STRING>\n                                  {printf("Line %d, column %d: unterminated string literal\n", num_line, num_column); 
+<STRING>\n                                  {printf("Line %d, column 1: unterminated string literal\n", num_line); 
                                                 num_line++; 
                                                 num_column = 1; 
                                                 freeBlock(); 
@@ -155,9 +156,10 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 
 <COMMENT>"*""/"                             {BEGIN 0;}
-<COMMENT>EOF                                {;}     //TODO
-<COMMENT>.                                  {num_column++;}
+<COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, num_column); return 0;}
+<COMMENT>.                                  {;}
 <COMMENT>\n                                 {num_line++; num_column = 1;}
+
 
 %%
 
