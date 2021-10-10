@@ -128,6 +128,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 \r                                          {;}
 .                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column += yyleng; last = 0;}
 \n                                          {num_line++; num_column = 1; if(last){ if(check) printf("SEMICOLON\n");} last = 0;}
+<INITIAL><<EOF>>                            {if(last) printf("SEMICOLON\n"); return 0;}
 
 
 <STRING>"\""                                {BEGIN 0; if(check && string_error == 0) {
