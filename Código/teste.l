@@ -1,22 +1,20 @@
- //Edgar Duarte 
-%{
-    int check = 0;
-%}
-%%
-["case""break"]             {printf("gay\n");}
-%%
-int main(int argc, char* argv[])
-{
-    
+package main
 
-    yylex();
-    return 0;
+func factorial(n int) int
+    if n == 0 {
+        return
+    }
+    return n * factorial(n-1)
+};
+
+a
+1
+1.e-1
+"a"
+"
+
+func main() {
+    var argument int
+    argument,_ = strconv.Atoi(os.Args[1])
+    fmt.Println(factorial(argument))
 }
-
-int yywrap()
-{
-return 1;
-}
-
-
-
