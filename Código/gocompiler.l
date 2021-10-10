@@ -58,7 +58,6 @@ id_characters                   [a-zA-Z0-9_]
 letters                         [a-zA-Z] 
 numbers                         [0-9]
 numbers_Hexa                    [0-9ABCDEFabcdef]
-illegal_octals                  [89a-zA-Z]
 legal_after                     [a-zA-Z0-9]*[^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""\-""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t"]
 reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"|"int64"|"float64"|"byte"|"complex64"|"complex128"|"error"|"int8"|"int16"|"int32"|"rune"|"uint"|"uint8"|"uint16"|"uint32"|"uint64"|"uintptr"|"true"|"false"|"iota"|"nil"|"append"|"cap"|"close"|"complex"|"copy"|"delete"|"imag"|"len"|"make"|"new"|"panic"|"print"|"println"|"real"|"recover"
 
@@ -68,7 +67,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[xX]((_)?{numbers_Hexa})*  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}  
 
-0[0-7{illegal_octals}]*                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
+0([0-7]*[89a-zA-Z]+[0-7]*)+                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
 {numbers}((_)?{numbers})*"."({numbers}*?([eE][+-]?{numbers}((_)?{numbers})*)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
@@ -78,7 +77,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 \"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng;}
 "/""/".*                                    {num_column += yyleng; last = 0;}
-"/""*"                                      {BEGIN COMMENT; num_column += yyleng; initial_line = num_line; last = 0;}
+"/""*"                                      {BEGIN COMMENT; initial_line = num_line; last = 0;}
 
 "package"                                   {if(check) printf("PACKAGE\n"); num_column += yyleng; last = 0;}
 "return"                                    {if(check) printf("RETURN\n"); num_column += yyleng; last = 1;}
