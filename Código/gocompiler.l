@@ -135,6 +135,9 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
                                                         printf("STRLIT(\"%s\")\n", ptr);}
                                                     freeBlock();
                                                     num_column++;}
+
+<STRING>\\\"                                {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\"'; checkBlock();} num_column++;}
+<STRING>"\\\\"                              {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\\'; checkBlock();} num_column++;}                                                    
 <STRING>\\[^fnrt]                           {str_column_eror = num_column; ptr_erro = yytext + 1; num_column += yyleng; string_error = 1;}
 <STRING>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
 <STRING>\n                                  {printf("Line %d, column 1: unterminated string literal\n", num_line); 
