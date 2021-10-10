@@ -131,6 +131,10 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
                                                     freeBlock();
                                                     num_column++;}
 
+<STRING>"carriage return"                   {string_error = 1; num_column += yyleng;}
+<STRING>"newline"                           {string_error = 1; num_column += yyleng;}
+<STRING>"\"\""                              {string_error = 1; num_column += yyleng;}
+
 <STRING>\\f                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock();} num_column++;}
 <STRING>\\n                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock();} num_column++;}
 <STRING>\\r                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 't'; checkBlock();} num_column++;}
