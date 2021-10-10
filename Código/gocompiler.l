@@ -32,7 +32,7 @@
 
     void freeBlock() {
         if (string_error) {
-            printf("Line %d, column %d: invalid escape sequence (\"\\%c\")\n", num_line, str_column_eror-1, *ptr_erro); 
+            printf("Line %d, column %d: invalid escape sequence (\"\\%c\")\n", num_line, str_column_eror, *ptr_erro); 
             last = 0;
         } else last = 1;
 
@@ -49,7 +49,6 @@
                 exit(-1);
         }
     }
-
 
 %}
 
@@ -131,17 +130,11 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 \n                                          {num_line++; num_column = 1; if(last){ if(check) printf("SEMICOLON\n");} last = 0;}
 
 
-<STRING>"\""                                {BEGIN 0; if(check) {
+<STRING>"\""                                {BEGIN 0; if(check && string_error == 0) {
                                                         ptr[counter++] = '\0';
                                                         printf("STRLIT(\"%s\")\n", ptr);}
                                                     freeBlock();
                                                     num_column++;}
-<STRING>\\f                                 {if(check) ptr[counter++] = '\f'; checkBlock(); num_column++;}
-<STRING>\\n                                 {if(check) ptr[counter++] = '\n'; checkBlock(); num_column++;}
-<STRING>\\r                                 {if(check) ptr[counter++] = '\r'; checkBlock(); num_column++;}
-<STRING>\\t                                 {if(check) ptr[counter++] = '\t'; checkBlock(); num_column++;}
-<STRING>"\\\\"                                  {if(check) ptr[counter++] = '\\'; checkBlock(); num_column++;}     
-<STRING>\\\"                                {if(check) ptr[counter++] = '\"'; checkBlock(); num_column++;} 
 <STRING>\\[^fnrt]                           {str_column_eror = num_column; ptr_erro = yytext + 1; num_column += yyleng; string_error = 1;}
 <STRING>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
 <STRING>\n                                  {printf("Line %d, column 1: unterminated string literal\n", num_line); 
