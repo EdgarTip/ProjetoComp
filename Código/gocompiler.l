@@ -75,8 +75,8 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 
 \"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng;}
-"/""/".*                                    {num_column += yyleng; last = 0;}
-"/""*"                                      {BEGIN COMMENT; initial_line = num_line; last = 0;}
+"/""/".*                                    {if(last) printf("SEMICOLON\n"); num_column += yyleng; last = 0;}
+"/""*"                                      {BEGIN COMMENT; initial_line = num_line;}
 
 "package"                                   {if(check) printf("PACKAGE\n"); num_column += yyleng; last = 0;}
 "return"                                    {if(check) printf("RETURN\n"); num_column += yyleng; last = 1;}
@@ -151,7 +151,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 <COMMENT>"*""/"                             {BEGIN 0;}
 <COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, num_column); return 0;}
 <COMMENT>.                                  {;}
-<COMMENT>\n                                 {num_line++; num_column = 1;}
+<COMMENT>\n                                 {if(last) printf("SEMICOLON\n"); last = 0; num_line++; num_column = 1;}
 
 
 %%
