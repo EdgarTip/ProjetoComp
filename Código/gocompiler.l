@@ -63,6 +63,8 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0[0-7]*[89a-zA-Z]                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
+0[oO]?((_)?[0-7])*([eE][+-]?{numbers}+)?  {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+
 {numbers}((_)?{numbers})*"."({numbers}*?([eE][+-]?{numbers}((_)?{numbers})*)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 "."{numbers}+([eE][+-]?{numbers}+)?                 {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 [1-9]{numbers}*[eE][+-]?{numbers}+                  {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
