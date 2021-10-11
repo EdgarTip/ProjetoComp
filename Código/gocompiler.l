@@ -56,11 +56,11 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 %%
 0                                           {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-[1-9]((_)?{numbers})*            {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-0[xX]((_)?{numbers_Hexa})*  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}  
+0[xX]((_)?{numbers_Hexa})*                  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}  
 
-0([0-7]*[89a-zA-Z]+[0-7]*)+                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
+0[0-7]*[89a-zA-Z]                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
 {numbers}((_)?{numbers})*"."({numbers}*?([eE][+-]?{numbers}((_)?{numbers})*)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}

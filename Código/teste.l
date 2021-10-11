@@ -1,20 +1,5 @@
-package main
-
-func factorial(n int) int
-    if n == 0 {
-        return
-    }
-    return n * factorial(n-1)
-};
-
-a
-1
-1.e-1
-"a"
-"
-
-func main() {
-    var argument int
-    argument,_ = strconv.Atoi(os.Args[1])
-    fmt.Println(factorial(argument))
-}
+0x124ad1
+0x12az
+012a b z
+0z
+0xZ
