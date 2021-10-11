@@ -50,7 +50,7 @@
 id_characters                   [a-zA-Z0-9_]
 letters                         [a-zA-Z] 
 numbers                         [0-9]
-numbers_Hexa                    [0-9ABCDEFabcdef]
+numbers_Hexa                    [0-9A-Fa-f]
 legal_after                     [a-zA-Z0-9]*[^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""\-""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t"]
 exp                             [eE][+-]?
 expHexa                         [pP][+-]?
@@ -62,8 +62,7 @@ nums_c                          {numbers}((_)?{numbers})*
 hexaNum                         {hexaN}((_)?{hexaN})*
 octalNum                        {octalN}((_)?{octalN})*
 
-real_int_hexa1                  0[xX]((_)?[0-9a-fA-F])+("."[0-9a-fA-F]*)?([pP][+-]?{numbers}((_)?{numbers})*)?|0[xX]?((_)?[0-9a-fA-F])*("."[0-9a-fA-F]+)([pP][+-]{numbers}((_)?{numbers})*)?
-real_int_oct1                   0[oO]?((_)?[0-7])+("."[0-7]*)?([eE][+-]?{numbers}((_)?{numbers})*)?|0[oO]?((_)?[0-7])*("."[0-7]+)([eE][+-]?{numbers}((_)?{numbers})*)?             
+
 reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"
 
 %%
@@ -80,12 +79,12 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
  
 
-0*{nums_c}"."{numbers}?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 "."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 [1-9]{nums_c}*({exp}{nums_c})?                                      {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
 
-\"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng;}
+\"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng; last = 1;}
 "/""/".*                                    {if(last) printf("SEMICOLON\n"); num_column += yyleng; last = 0;}
 "/""*"                                      {BEGIN COMMENT; initial_line = num_line;}
 
@@ -148,9 +147,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
                                                     freeBlock();
                                                     num_column++;}
 
-<STRING>"carriage return"                   {string_error = 1; num_column += yyleng;}
-<STRING>"newline"                           {string_error = 1; num_column += yyleng;}
-<STRING>"\"\""                              {string_error = 1; num_column += yyleng;}
+
 
 <STRING>\\f                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock();} num_column++;}
 <STRING>\\n                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock();} num_column++;}
@@ -160,7 +157,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 <STRING>\\\r                                 {printf("Line %d, column %d: invalid escape sequence (%c)\n", num_line, num_column, *yytext); string_error = 1; num_column += yyleng;}
 <STRING>\\\"                                {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\"'; checkBlock();} num_column++;}
 <STRING>"\\\\"                              {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\\'; checkBlock();} num_column++;}                                                    
-<STRING>\\[^fnrt]?                          {printf("Line %d, column %d: invalid escape sequence (%c%c)\n", num_line, num_column, *yytext, *(yytext+1)); string_error = 1; num_column += yyleng;}
+<STRING>\\[^fnrt]?                          {printf("Line %d, column %d: invalid escape sequence (%c%c)\n", num_line, num_column, *yytext, *(yytext+1)); string_error = 1; num_column += yyleng; last = 0;}
 
 
 <STRING>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
