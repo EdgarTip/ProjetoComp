@@ -52,7 +52,7 @@ letters                         [a-zA-Z]
 numbers                         [0-9]
 numbers_Hexa                    [0-9ABCDEFabcdef]
 legal_after                     [a-zA-Z0-9]*[^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""\-""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t"]
-reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"|"int64"|"float64"|"byte"|"complex64"|"complex128"|"error"|"int8"|"int16"|"int32"|"rune"|"uint"|"uint8"|"uint16"|"uint32"|"uint64"|"uintptr"|"true"|"false"|"iota"|"nil"|"append"|"cap"|"close"|"complex"|"copy"|"delete"|"imag"|"len"|"make"|"new"|"panic"|"print"|"println"|"real"|"recover"
+reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"
 
 %%
 0                                           {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
@@ -60,10 +60,10 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[xX]((_)?{numbers_Hexa})*  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}  
 
-0([0-7]*[89a-zA-Z]+[0-7]*)+                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
+0[0-7]*[89a-zA-Z]                { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
-{numbers}((_)?{numbers})*"."({numbers}*?([eE][+-]?{numbers}((_)?{numbers})*)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+0*{numbers}((_)?{numbers})*"."({numbers}*?([eE][+-]?{numbers}((_)?{numbers})*)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 "."{numbers}+([eE][+-]?{numbers}+)?                 {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 [1-9]{numbers}*[eE][+-]?{numbers}+                  {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
@@ -137,7 +137,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 <STRING>\\f                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock();} num_column++;}
 <STRING>\\n                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock();} num_column++;}
-<STRING>\\r                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 't'; checkBlock();} num_column++;}
+<STRING>\\r                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'r'; checkBlock();} num_column++;}
 <STRING>\\t                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 't'; checkBlock();} num_column++;}
 
 <STRING>\\\r                                 {printf("Line %d, column %d: invalid escape sequence (%c)\n", num_line, num_column, *yytext); string_error = 1; num_column += yyleng;}
