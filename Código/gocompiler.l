@@ -52,6 +52,8 @@ letters                         [a-zA-Z]
 numbers                         [0-9]
 numbers_Hexa                    [0-9ABCDEFabcdef]
 legal_after                     [a-zA-Z0-9]*[^" "\n\r"=="">=""<=""!=""&&""||"";"",""_""\-""=""*""/""+"">""{""(""[""<""%""!""}"")""\]""\t"]
+real_int_hexa1                   0[xX]?((_)?[0-9a-fA-F])+("."[0-9a-fA-F]*)?([pP][+-]?{numbers}+)?|0[xX]?((_)?[0-9a-fA-F])*("."[0-9a-fA-F]+)?([pP][+-]?{numbers}+)?
+real_int_oct1                   0[oO]?((_)?[0-7])+("."[0-7]*)?([eE][+-]?{numbers}+)?|0[oO]?((_)?[0-7])*("."[0-7]+)?([eE][+-]?{numbers}+)?             
 reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"
 
 %%
@@ -64,7 +66,8 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0[0-7]*[89a-zA-Z]                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
-0[oO]?((_)?[0-7])*([eE][+-]?{numbers}+)?  {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+{real_int_oct1}   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+{real_int_hexa1}  {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
 0*{numbers}((_)?{numbers})*"."({numbers}*?([eE][+-]?{numbers}((_)?{numbers})*)?)?   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
