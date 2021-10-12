@@ -58,9 +58,9 @@ expHexa                         [pP][+-]?
 hexaN                           [0-9a-fA-F]
 octalN                          [0-7]
 
-nums_c                          {numbers}((_)?{numbers})*
-hexaNum                         {hexaN}((_)?{hexaN})*
-octalNum                        {octalN}((_)?{octalN})*
+nums_c                          ((_)?{numbers})+
+hexaNum                         ((_)?{hexaN})+
+octalNum                        ((_)?{octalN})+
 
 
 reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"
@@ -72,7 +72,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}  
 
 
-0[0-7]+[89a-zA-Z]                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
+0([0-7]+[89a-zA-Z])|08|09                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
 0[oO]?(({octalNum}+("."{octalN}*)?)|({octalNum}*"."{octalN}+))({exp}{nums_c})?                                   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
