@@ -1,5 +1,5 @@
   //Edgar Duarte 2019216077 Rodrigo Ferreira   2019220060 .
-%X  STRING COMMENT 
+%X  STRING COMMENT OCTAL_ERROR
 %{
     #include <stdlib.h>
     
@@ -8,6 +8,7 @@
     int check = 0;
     int last = 0;
     int initial_line = 0;
+    int initial_column = 0;
 
     char *ptr = NULL;
     char *ptr_erro = NULL;
@@ -71,22 +72,23 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}  
 
+[0-9]{nums_c}*{exp}{nums_c}                                      {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+"."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
-0([0-7]+[89a-zA-Z])|08|09                    { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
+(0[0-7]+[89a-df-zA-DF-Z]|08|09)[^" ""."\n]*                   { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
 
-0[oO]?(({octalNum}+("."{octalN}*)?)|({octalNum}*"."{octalN}+))({exp}{nums_c})?                                   {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
  
 
-0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-"."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-[1-9]{nums_c}*({exp}{nums_c})?                                      {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+
+
 
 
 \"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng; last = 1;}
 "/""/".*                                    {if(last) printf("SEMICOLON\n"); num_column += yyleng; last = 0;}
-"/""*"                                      {BEGIN COMMENT; initial_line = num_line;}
+"/""*"                                      {BEGIN COMMENT; initial_column = num_column; initial_line = num_line; num_column += yyleng;}
 
 "package"                                   {if(check) printf("PACKAGE\n"); num_column += yyleng; last = 0;}
 "return"                                    {if(check) printf("RETURN\n"); num_column += yyleng; last = 1;}
@@ -134,9 +136,9 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 [a-zA-Z_]{id_characters}*                    {if(check) printf("ID(%s)\n", yytext); num_column += yyleng; last = 1;}
 
 " "                                         {num_column++;}
-\t                                          {;}
-\r                                          {;}
-.                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column += yyleng; last = 0;}
+\t                                          {num_column+= yyleng;}
+\r                                          {num_column+= yyleng;}
+.                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column++; last = 0;}
 \n                                          {num_line++; num_column = 1; if(last){ if(check) printf("SEMICOLON\n");} last = 0;}
 <INITIAL><<EOF>>                            {if(last) printf("SEMICOLON\n"); return 0;}
 
@@ -145,18 +147,18 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
                                                         ptr[counter++] = '\0';
                                                         printf("STRLIT(\"%s\")\n", ptr);}
                                                     freeBlock();
-                                                    num_column++;}
+                                                    num_column+= yyleng;}
 
 
 
-<STRING>\\f                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock();} num_column++;}
-<STRING>\\n                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock();} num_column++;}
-<STRING>\\r                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'r'; checkBlock();} num_column++;}
-<STRING>\\t                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 't'; checkBlock();} num_column++;}
+<STRING>\\f                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock();} num_column+= yyleng;}
+<STRING>\\n                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock();} num_column+= yyleng;}
+<STRING>\\r                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'r'; checkBlock();} num_column+= yyleng;}
+<STRING>\\t                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 't'; checkBlock();} num_column+= yyleng;}
 
 <STRING>\\\r                                 {printf("Line %d, column %d: invalid escape sequence (%c)\n", num_line, num_column, *yytext); string_error = 1; num_column += yyleng;}
-<STRING>\\\"                                {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\"'; checkBlock();} num_column++;}
-<STRING>"\\\\"                              {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\\'; checkBlock();} num_column++;}                                                    
+<STRING>\\\"                                {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\"'; checkBlock();} num_column+= yyleng;}
+<STRING>"\\\\"                              {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\\'; checkBlock();} num_column+= yyleng;}                                                    
 <STRING>\\[^fnrt]?                          {printf("Line %d, column %d: invalid escape sequence (%c%c)\n", num_line, num_column, *yytext, *(yytext+1)); string_error = 1; num_column += yyleng; last = 0;}
 
 
@@ -172,9 +174,10 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 
 <COMMENT>"*""/"                             {BEGIN 0;}
-<COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, num_column); return 0;}
+<COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, initial_column); return 0;}
 <COMMENT>.                                  {;}
 <COMMENT>\n                                 {if(last) printf("SEMICOLON\n"); last = 0; num_line++; num_column = 1;}
+
 
 
 %%
