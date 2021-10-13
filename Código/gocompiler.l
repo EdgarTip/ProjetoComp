@@ -67,8 +67,11 @@ octalNum                        ((_)?{octalN})+
 reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"
 
 %%
+
+0[0-7]*(8|9)[0-9]*                   {printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
+
 0                                           {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+0*[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}  
 
@@ -76,7 +79,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 "."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
-(0[0-7]+[89a-df-zA-DF-Z]|08|09)[^" ""."\n]*                   {printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
+
 
 
 0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
