@@ -11,7 +11,6 @@
     int initial_column = 0;
 
     char *ptr = NULL;
-    char *ptr_erro = NULL;
 
     int string_error = 0;
 
@@ -63,7 +62,6 @@ nums_c                          ((_)?{numbers})+
 hexaNum                         ((_)?{hexaN})+
 octalNum                        ((_)?{octalN})+
 
-
 reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"
 
 %%
@@ -80,13 +78,8 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 "."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
 
-
-
 0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
  
-
-
-
 
 
 \"                                          {BEGIN STRING; initializeBlock(); initial_column = num_column; num_column += yyleng; last = 1;}
@@ -152,8 +145,6 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
                                                     freeBlock();
                                                     num_column+= yyleng;}
 
-
-
 <STRING>\\f                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock();} num_column+= yyleng;}
 <STRING>\\n                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock();} num_column+= yyleng;}
 <STRING>\\r                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'r'; checkBlock();} num_column+= yyleng;}
@@ -163,7 +154,6 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 <STRING>\\\"                                {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\"'; checkBlock();} num_column+= yyleng;}
 <STRING>"\\\\"                              {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\\'; checkBlock();} num_column+= yyleng;}                                                    
 <STRING>\\[^fnrt]?                          {printf("Line %d, column %d: invalid escape sequence (%c%c)\n", num_line, num_column, *yytext, *(yytext+1)); string_error = 1; num_column += yyleng; last = 0;}
-
 
 <STRING>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
 
