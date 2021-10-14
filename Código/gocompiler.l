@@ -11,7 +11,6 @@
     int initial_column = 0;
 
     char *ptr = NULL;
-    char *ptr_erro = NULL;
 
     int string_error = 0;
 
@@ -63,12 +62,14 @@ nums_c                          ((_)?{numbers})+
 hexaNum                         ((_)?{hexaN})+
 octalNum                        ((_)?{octalN})+
 
-
 reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"
 
 %%
+
+0[0-7]*(8|9)[0-9]*                   {printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
+
 0                                           {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+0*[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}  
 
@@ -76,18 +77,13 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 "."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
 
-(0[0-7]+[89a-df-zA-DF-Z]|08|09)[^" ""."\n]*                   { printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
-
 
 0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
  
 
 
-
-
-
-\"                                          {BEGIN STRING; initializeBlock(); num_column += yyleng; last = 1;}
-"/""/".*                                    {if(last) printf("SEMICOLON\n"); num_column += yyleng; last = 0;}
+\"                                          {BEGIN STRING; initializeBlock(); initial_column = num_column; num_column += yyleng; last = 1;}
+"/""/".*                                    {if(last && check) printf("SEMICOLON\n"); num_column += yyleng; last = 0;}
 "/""*"                                      {BEGIN COMMENT; initial_column = num_column; initial_line = num_line; num_column += yyleng;}
 
 "package"                                   {if(check) printf("PACKAGE\n"); num_column += yyleng; last = 0;}
@@ -137,10 +133,10 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 " "                                         {num_column++;}
 \t                                          {num_column+= yyleng;}
-\r                                          {num_column+= yyleng;}
-.                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column++; last = 0;}
-\n                                          {num_line++; num_column = 1; if(last){ if(check) printf("SEMICOLON\n");} last = 0;}
-<INITIAL><<EOF>>                            {if(last) printf("SEMICOLON\n"); return 0;}
+\r                                          {num_column = 1;}
+.                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column+= yyleng; last = 0;}
+\n                                          {num_line++; num_column = 1; if(last && check) printf("SEMICOLON\n"); last = 0;}
+<INITIAL><<EOF>>                            {if(check && last) printf("SEMICOLON\n"); return 0;}
 
 
 <STRING>"\""                                {BEGIN 0; if(check && string_error == 0) {
@@ -149,34 +145,31 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
                                                     freeBlock();
                                                     num_column+= yyleng;}
 
-
-
 <STRING>\\f                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock();} num_column+= yyleng;}
 <STRING>\\n                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock();} num_column+= yyleng;}
 <STRING>\\r                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'r'; checkBlock();} num_column+= yyleng;}
 <STRING>\\t                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 't'; checkBlock();} num_column+= yyleng;}
-
 <STRING>\\\r                                 {printf("Line %d, column %d: invalid escape sequence (%c)\n", num_line, num_column, *yytext); string_error = 1; num_column += yyleng;}
+
 <STRING>\\\"                                {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\"'; checkBlock();} num_column+= yyleng;}
 <STRING>"\\\\"                              {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\\'; checkBlock();} num_column+= yyleng;}                                                    
 <STRING>\\[^fnrt]?                          {printf("Line %d, column %d: invalid escape sequence (%c%c)\n", num_line, num_column, *yytext, *(yytext+1)); string_error = 1; num_column += yyleng; last = 0;}
 
-
 <STRING>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
 
-<STRING>\n                                  {printf("Line %d, column 1: unterminated string literal\n", num_line); 
+<STRING>\n                                  {printf("Line %d, column %d: unterminated string literal\n", num_line, initial_column);     
                                                 num_line++; 
                                                 num_column = 1; 
                                                 freeBlock(); 
                                                 BEGIN 0; last = 0;}   
 
-<STRING><<EOF>>                             {printf("Line %d, column 1: unterminated string literal\n", num_line); freeBlock(); return 0;}
+<STRING><<EOF>>                             {printf("Line %d, column %d: unterminated string literal\n", num_line, initial_column); freeBlock(); return 0;}
 
 
-<COMMENT>"*""/"                             {BEGIN 0;}
+<COMMENT>"*""/"                             {BEGIN 0; num_column+= yyleng;}
 <COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, initial_column); return 0;}
-<COMMENT>.                                  {;}
-<COMMENT>\n                                 {if(last) printf("SEMICOLON\n"); last = 0; num_line++; num_column = 1;}
+<COMMENT>.                                  {num_column++;}
+<COMMENT>\n                                 {if(check && last) printf("SEMICOLON\n"); last = 0; num_line++; num_column = 1;}
 
 
 
