@@ -16,17 +16,15 @@
 
 %%
 
-calc: expression                        {printf("%d\n", $1);}
+Program: PACKAGE ID SEMICOLON Declarations    {printf("%d\n", $1);}
 
-expression: expression '+' expression   {$$=$1+$3;}
-    |   expression '-' expression       {$$=$1-$3;}
-    |   expression '*' expression       {$$=$1*$3;}
-    |   expression '/' expression       {if($3 ==0){printf("Divide by zero\n"); exit(1);} $$=$1/$3;}
-    |   '-' expression                  {$$=-$2;}
-    |   '+' expression                  {$$= $2;}
-    |   NUMBER                          {$$=$1;}
-    |   '(' expression ')'              {$$=$2;}
-    ;
+Declarations: VarDeclaration SEMICOLON        {;}
+    |   FuncDeclaration SEMICOLON             {;}
+    |   Declarations Declarations             {;}
+    |                                         {;}
+
+VarDeclaration: VarDeclaration Declarations SEMICOLON
+
 %%
 
 int main() {
