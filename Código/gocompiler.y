@@ -21,13 +21,25 @@ Program: PACKAGE ID SEMICOLON Declarations    {printf("%d\n", $1);}
 
 Declarations: VarDeclaration SEMICOLON Declarations       {;}
     |   FuncDeclaration SEMICOLON Declarations            {;}
-    |                                         {;}
+    |                                                     {;}
     ;
 
-VarDeclaration: VarDeclaration Declarations SEMICOLON
-;
+VarDeclaration: VAR VarSpec                                         {;}
+    |   VAR LPAR VarSpec SEMICOLON RPAR                             {;}
+    ;
 
-
+VarSpec: ID CommaId Type                                            {;}
+    ;
+   
+CommaId: COMMA ID CommaId                                           {;}
+    |                                                               {;}
+    ;
+    
+Type: INT                                                           {;}
+    |   FLOAT32                                                     {;}
+    |   BOOL                                                        {;}
+    |   STRING                                                      {;}
+    ;
 
 FuncDeclaration: FUNC ID LPAR Parameters RPAR Type FuncBody  {;}
     | FUNC ID LPAR RPAR Type FuncBody             {;}
@@ -74,6 +86,26 @@ StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {;}
     |                                                      {;}
 ;
 
+ParseArgs: ID COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR  {;}
+    ;
+
+FuncInvocation: ID LPAR OpcExpr RPAR                                {;}
+    ;
+
+OpcExpr: Expr CommaExpr                                             {;}
+    |                                                               {;}
+    ;
+
+CommaExpr: COMMA Expr CommaExpr                                     {;}
+    |                                                               {;}
+    ;
+
+Expr: Expr (OR | AND) Expr                                          {;}
+    |   Expr (LT | GT | EQ | NE | LE | GE) Expr                     {;}
+    |   Expr (PLUS | MINUS | STAR | DIV | MOD) Expr                 {;}
+    |   (NOT | MINUS | PLUS) Expr                                   {;}
+    |   (INTLIT | REALLIT | ID | FuncInvocation | LPAR Expr RPAR)   {;}
+    ;
 
 
 %%
