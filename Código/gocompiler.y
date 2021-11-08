@@ -3,25 +3,28 @@
     #include <stdlib.h>
     int yylex(void);
     void yyerror (const char *s);
+    
 %}
 
 %token PACKAGE ID SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT STRLIT ASSIGN  BLANKID  PARSEINT CMDARGS LSQ RSQ OR AND LT GT EQ  NE LE GE PLUS MINUS STAR DIV MOD NOT INTLIT REALLIT ELSE IF FOR
 
 
+
+%right EQ GE GT LT LE NE
 %left PLUS MINUS
 %left STAR DIV MOD 
 %right NOT
 %right OR AND 
-%right EQ GE GT LT LE NE
 
 
-
-
-
+%union{
+int value;
+char* id;
+}
 
 %%
 
-Program: PACKAGE ID SEMICOLON Declarations    {printf("%d\n", $1);}
+Program: PACKAGE ID SEMICOLON Declarations    {;}
 ;
 
 Declarations: VarDeclaration SEMICOLON Declarations       {;}
@@ -136,8 +139,4 @@ Expr: Expr OR Expr                                             {;}
 
 %%
 
-int main() {
-    yyparse();
-    return 0;
-}
 
