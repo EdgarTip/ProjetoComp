@@ -5,11 +5,16 @@
     void yyerror (const char *s);
 %}
 
-%token NUMBER
+%token PACKAGE ID SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT STRLIT ASSIGN  BLANKID  PARSEINT CMDARGS LSQ RSQ OR AND LT GT EQ  NE LE GE PLUS MINUS STAR DIV MOD NOT INTLIT REALLIT ELSE IF FOR
 
-%left '+' '-'
-%left '*' '/'
-%nonassoc '('')'
+
+%left PLUS MINUS
+%left STAR DIV MOD 
+%right NOT
+%right OR AND 
+%right EQ GE GT LT LE NE
+
+
 
 
 
@@ -43,21 +48,24 @@ Type: INT                                                           {;}
 
 FuncDeclaration: FUNC ID LPAR Parameters RPAR Type FuncBody  {;}
     | FUNC ID LPAR RPAR Type FuncBody             {;}
-    | FUNC ID LPAR Parameter RPAR FuncBody        {;}
+    | FUNC ID LPAR Parameters RPAR FuncBody        {;}
     | FUNC ID LPAR RPAR FuncBody                  {;}
 
 Parameters: ID Type                               {;}
-    | ID Type COMMA Parameter                     {;}
+    | ID Type COMMA Parameters                     {;}
 ;
 
-FuncBody: LBRACE VarsAndStatments RBRACE          {;}
+FuncBody: LBRACE VarsAndStatements RBRACE          {;}
+;
 
-VarsAndStatements: VarsAndStatements varsAndStatementsOpc SEMICOLON    {;}
+VarsAndStatements: VarsAndStatements VarsAndStatementsOpc SEMICOLON    {;}
     |                                             {;}
+    ;
 
-varsAndStatementsOpc: VarDeclaration              {;}
-| Statement                                       {;}
-|                                                 {;}
+VarsAndStatementsOpc: VarDeclaration              {;}
+    | Statement                                       {;}
+    |                                                 {;}
+    ;
 
 Statement: ID ASSIGN Expr                         {;}
     | LBRACE StatementSEMICOLON RBRACE            {;}
@@ -100,12 +108,30 @@ CommaExpr: COMMA Expr CommaExpr                                     {;}
     |                                                               {;}
     ;
 
-Expr: Expr (OR | AND) Expr                                          {;}
-    |   Expr (LT | GT | EQ | NE | LE | GE) Expr                     {;}
-    |   Expr (PLUS | MINUS | STAR | DIV | MOD) Expr                 {;}
-    |   (NOT | MINUS | PLUS) Expr                                   {;}
-    |   (INTLIT | REALLIT | ID | FuncInvocation | LPAR Expr RPAR)   {;}
+Expr: Expr OR Expr                                             {;}
+    |   Expr AND Expr                                          {;}
+    |   Expr LT Expr                                           {;}
+    |   Expr GT Expr                                           {;}
+    |   Expr EQ Expr                                           {;}
+    |   Expr NE Expr                                           {;}
+    |   Expr LE Expr                                           {;}
+    |   Expr GE Expr                                           {;}
+    |   Expr PLUS Expr                                         {;}
+    |   Expr MINUS Expr                                        {;}
+    |   Expr STAR Expr                                         {;}
+    |   Expr DIV Expr                                          {;}
+    |   Expr MOD Expr                                          {;}
+    |   MINUS Expr                                             {;}
+    |   PLUS  Expr                                             {;}
+    |   NOT  Expr  
+    |   INTLIT                                                 {;}
+    |   REALLIT                                                {;}
+    |   ID                                                     {;}
+    |   FuncInvocation                                         {;}
+    |   LPAR Expr RPAR                                         {;}
     ;
+
+
 
 
 %%
