@@ -175,19 +175,13 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 %%
 
-int main(int argc, char* argv[])
-{
-    if(argc == 2){
-        if(strcmp(argv[1], "-l") == 0){
-            check = 1;
-        }
-    }
 
-yylex();
-return 0;
-}
 
 int yywrap()
 {
-return 1;
+    return 1;
+}
+
+void yyerror (const char *s) { 
+     printf ("%s: %s\n", s, yytext);
 }
