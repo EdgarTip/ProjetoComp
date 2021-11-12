@@ -4,25 +4,31 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#define SIZE 120
-
-
 
 typedef struct node *tree_node;
+typedef struct node_list *tree_list;
 
-/**
- * type : type implemented
- * children: all the children that can appear from a production
- * parent: parent of current node
- * collumn : collumn where found
- * line : line where found
- */
-struct node{
+enum class_name{PROGRAM, DECLARATION, ELSE, IF, INTLIT};
 
-    char type[SIZE];
-    tree_node *children;
-    tree_node parent;
-    
-    int line;
-    int collumn;
+struct token{
+    char *symbol;
+    int line, column;
 };
+
+
+struct node{
+    enum class_name class;
+    struct token *token;
+    struct node_list *children;
+};
+
+struct node_list{
+    struct node *node;
+    struct node_list *next;
+};
+
+
+tree_list create_node(enum class_name class, char *symbol, int line, int column );
+void addChild(tree_list root, tree_list new_child);
+void freeTree(tree_list root);
+void printTree(tree_list node, int depth);

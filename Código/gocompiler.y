@@ -16,6 +16,7 @@
 %right NOT
 %right OR AND 
 
+%type<value>Program
 
 %union{
 int value;
@@ -24,11 +25,12 @@ char* id;
 
 %%
 
-Program: PACKAGE ID SEMICOLON Declarations    {;}
+
+Program: PACKAGE ID SEMICOLON Declarations    {$$= create_node(PACKAGE, "package", 0, 0); addChild($$, create_node(addChild($$,$4);}
 ;
 
-Declarations: VarDeclaration SEMICOLON Declarations       {;}
-    |   FuncDeclaration SEMICOLON Declarations            {;}
+Declarations: VarDeclaration SEMICOLON Declarations       { $$= create_node(DECLARATION, "declaration", 0, 0); addChild($$, $1); addChild($$, $3); }
+    |   FuncDeclaration SEMICOLON Declarations            {$$= create_node(DECLARATION, "declaration", 0, 0); addChild($$, $1); addChild($$, $3);;}
     |                                                     {;}
     ;
 
