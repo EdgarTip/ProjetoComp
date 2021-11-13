@@ -87,10 +87,11 @@ extern int yydebug;
     ELSE = 293,
     IF = 294,
     FOR = 295,
-    ID = 296,
-    REALLIT = 297,
-    INTLIT = 298,
-    STRLIT = 299
+    END = 296,
+    ID = 297,
+    REALLIT = 298,
+    INTLIT = 299,
+    STRLIT = 300
   };
 #endif
 /* Tokens.  */
@@ -132,10 +133,11 @@ extern int yydebug;
 #define ELSE 293
 #define IF 294
 #define FOR 295
-#define ID 296
-#define REALLIT 297
-#define INTLIT 298
-#define STRLIT 299
+#define END 296
+#define ID 297
+#define REALLIT 298
+#define INTLIT 299
+#define STRLIT 300
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -147,7 +149,7 @@ int value;
 char* letters;
 struct node_list *node;
 
-#line 151 "y.tab.h"
+#line 153 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

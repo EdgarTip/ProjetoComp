@@ -7,7 +7,7 @@
     
 %}
 
-%token PACKAGE  SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT ASSIGN  BLANKID  PARSEINT CMDARGS LSQ RSQ OR AND LT GT EQ  NE LE GE PLUS MINUS STAR DIV MOD NOT   ELSE IF FOR
+%token PACKAGE  SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT ASSIGN  BLANKID  PARSEINT CMDARGS LSQ RSQ OR AND LT GT EQ  NE LE GE PLUS MINUS STAR DIV MOD NOT   ELSE IF FOR END
 
 %token<letters>ID REALLIT INTLIT STRLIT
 
@@ -52,12 +52,12 @@ struct node_list *node;
 %%
 
 
-Program: PACKAGE ID SEMICOLON Declarations    {$$= create_node(PROGRAM, "program", 0, 0); addChild($$, create_node(IDE, $2, 0,0)); addChild($$,$4); printf("HEREEE\n");printTree($$,0); freeTree($$);}
+Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "program", 0, 0); addChild($$, create_node(IDE, $2, 0,0)); addChild($$,$4); printf("HEREEE\n");printTree($$,0); freeTree($$);}
 ;
 
 Declarations: VarDeclaration SEMICOLON Declarations       { $$= create_node(DECLARATION, "declaration", 0, 0); addChild($$, $1); addChild($$, $3); }
     |   FuncDeclaration SEMICOLON Declarations            {$$= create_node(DECLARATION, "declaration", 0, 0); addChild($$, $1); addChild($$, $3);}
-    |                                                     {;}
+    |  /*empty*/                                                   {$$=NULL;}
     ;
 
 VarDeclaration: VAR VarSpec                                         {$$= create_node(VARDEC, "vardec", 0, 0); addChild($$, $2);}

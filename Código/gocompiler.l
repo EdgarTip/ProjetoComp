@@ -138,7 +138,7 @@ yylval.letters = strdup(yytext); return ID;}
 \r                                          {num_column = 1;}
 .                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column+= yyleng; last = 0;}
 \n                                          {num_line++; num_column = 1; if(last && check){printf("SEMICOLON\n"); return SEMICOLON;} last = 0; }
-<INITIAL><<EOF>>                            {if(check && last) {printf("SEMICOLON\n"); return SEMICOLON;}}
+<INITIAL><<EOF>>                            {if(check && last) {printf("SEMICOLON\n"); return SEMICOLON;} return END;}
 
 
 <STRINGT>"\""                                {BEGIN 0; if(check && string_error == 0) {
@@ -167,11 +167,11 @@ yylval.letters = strdup(yytext); return ID;}
                                                 freeBlock(); 
                                                 BEGIN 0; last = 0;}   
 
-<STRINGT><<EOF>>                             {printf("Line %d, column %d: unterminated string literal\n", num_line, initial_column); freeBlock(); return 0;}
+<STRINGT><<EOF>>                             {printf("Line %d, column %d: unterminated string literal\n", num_line, initial_column); freeBlock(); return END;}
 
 
 <COMMENT>"*""/"                             {BEGIN 0; num_column+= yyleng;}
-<COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, initial_column); return 0;}
+<COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, initial_column); return END;}
 <COMMENT>.                                  {num_column++;}
 <COMMENT>\n                                 {if(check && last){ printf("SEMICOLON\n"); return SEMICOLON;} last = 0; num_line++; num_column = 1; }
 
