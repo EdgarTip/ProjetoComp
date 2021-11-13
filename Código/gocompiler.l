@@ -69,17 +69,17 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 0[0-7]*(8|9)[0-9]*                   {printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext);num_column += yyleng;}
 
-0                                           {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-0*[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1;}  
+0                                           {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1; yylval.letters = strdup(yytext); return INTLIT;}
+0*[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1; yylval.letters = strdup(yytext); return INTLIT;}
+0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1; yylval.letters = strdup(yytext); return INTLIT;}
+0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); num_column += yyleng; last = 1; yylval.letters = strdup(yytext); return INTLIT;}  
 
-[0-9]{nums_c}*{exp}{nums_c}                                      {if(check) printf("REALLIT(%s)\n", yytext);    num_column += yyleng; last = 1;}
-0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
-"."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}
+[0-9]{nums_c}*{exp}{nums_c}                                      {if(check) printf("REALLIT(%s)\n", yytext);    num_column += yyleng; last = 1;yylval.letters = strdup(yytext); return REALLIT;}
+0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1; yylval.letters = strdup(yytext); return REALLIT;}
+"."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1; yylval.letters = strdup(yytext); return REALLIT;}
 
 
-0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1;}   
+0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); num_column += yyleng; last = 1; yylval.letters = strdup(yytext); return REALLIT;}   
  
 
 
@@ -87,8 +87,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 "/""/".*                                    {if(last && check){ printf("SEMICOLON\n"); return SEMICOLON;} num_column += yyleng; last = 0;}
 "/""*"                                      {BEGIN COMMENT; initial_column = num_column; initial_line = num_line; num_column += yyleng;}
 
-"package"                                   {if(check) printf("PACKAGE\n"); num_column += yyleng; last = 0; 
-yylval.value =2; return PACKAGE;}
+"package"                                   {if(check) printf("PACKAGE\n"); num_column += yyleng; last = 0; return PACKAGE;}
 "return"                                    {if(check) printf("RETURN\n"); num_column += yyleng; last = 1; return RETURN;}
 "else"                                      {if(check) printf("ELSE\n"); num_column += yyleng; last = 0; return ELSE;}
 "for"                                       {if(check) printf("FOR\n"); num_column += yyleng; last = 0; return FOR;}
@@ -132,7 +131,7 @@ yylval.value =2; return PACKAGE;}
 "]"                                         {if(check) printf("RSQ\n"); num_column++; last = 1; return RSQ;}
 
 [a-zA-Z_]{id_characters}*                    {if(check) printf("ID(%s)\n", yytext); num_column += yyleng; last = 1;
-yylval.id = strdup(yytext); return ID; return SEMICOLON;}
+yylval.letters = strdup(yytext); return ID;}
 
 " "                                         {num_column++;}
 \t                                          {num_column+= yyleng;}
@@ -144,9 +143,11 @@ yylval.id = strdup(yytext); return ID; return SEMICOLON;}
 
 <STRINGT>"\""                                {BEGIN 0; if(check && string_error == 0) {
                                                         ptr[counter++] = '\0';
-                                                        printf("STRLIT(\"%s\")\n", ptr);}
+                                                        printf("STRLIT(\"%s\")\n", ptr);
+                                                        return STRLIT;
+                                                        }
                                                     freeBlock();
-                                                    num_column+= yyleng;}
+                                                    num_column+= yyleng; }
 
 <STRINGT>\\f                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock();} num_column+= yyleng;}
 <STRINGT>\\n                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock();} num_column+= yyleng;}

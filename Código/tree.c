@@ -40,8 +40,21 @@ tree_list create_node(enum class_name class, char *symbol, int line, int column 
 
 }
 
+void add_next(tree_list new_node, tree_list next_node){
+    if(new_node == NULL || next_node == NULL){
+        return;
+    }
+
+    new_node->next = next_node;
+}
+
 //Adds a new child to the tree
 void addChild(tree_list root, tree_list new_child){
+
+    if(new_child == NULL){
+        return;
+    }
+    
     if(root->node->children == NULL){
         root->node->children = new_child;
     }
@@ -100,7 +113,7 @@ void printTree(tree_list list, int depth){
         printf("..");
     }
     switch(list->node->class){
-        case INTLIT:
+        case INTLITE:
             printf("%s\n", list->node->token->symbol);
         default:
             printf("%s\n", list->node->token->symbol);

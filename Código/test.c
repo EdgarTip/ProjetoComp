@@ -7,7 +7,7 @@
 
 
 int main(int argc, char **argv){
-    tree_list root = create_node(PROGRAM, "gay", 2,3);
+   /* tree_list root = create_node(PROGRAM, "gay", 2,3);
     tree_list node1 = create_node(ELSE, "gay2", 4, 5);
     tree_list node2 = create_node(ELSE, "yoooo", 9 ,10);
     tree_list node3 = create_node(ELSE, "ef", 9 ,10);
@@ -28,5 +28,5 @@ int main(int argc, char **argv){
     printTree(root, 0);
 
     freeTree(root);
-    return 0;
+    return 0;*/
 }
