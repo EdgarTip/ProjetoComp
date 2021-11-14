@@ -143,8 +143,8 @@ VarsAndStatements: VarsAndStatements VarsAndStatementsOpc SEMICOLON    {if($1 !=
     |                                             {$$=NULL;}
     ;
 
-VarsAndStatementsOpc: VarDeclaration              {printTree($1,0); $$= $1;}
-    | Statement                                       {printTree($1,0);$$= $1;}
+VarsAndStatementsOpc: VarDeclaration              {$$= $1;}
+    | Statement                                       {$$= $1;}
     |                                                 {$$ = NULL;}
     ;
 
@@ -152,12 +152,23 @@ Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assi
                                                         addChild($$,create_node(IDE, $1,0,0)); 
                                                         addChild($$,$3);}
     | LBRACE StatementSEMICOLON RBRACE            {$$= $2;}
-    | IF Expr LBRACE StatementSEMICOLON RBRACE ElseLBraceStatementRbraceOpc   {$$= create_node(IFE, "If", 0,0); addChild($$,$2); addChild($$,$4); addChild($$,$6); }
-    | FOR ExprOpc LBRACE StatementSEMICOLON RBRACE {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$2); addChild($$,$4);}
+    | IF Expr LBRACE StatementSEMICOLON RBRACE ElseLBraceStatementRbraceOpc   {$$= create_node(IFE, "If", 0,0); 
+                                                                                struct node_list *aux= create_node(BLOCK, "Block",0,0);
+                                                                                struct node_list *aux2= create_node(BLOCK, "Block",0,0);
+                                                                                addChild($$,$2); 
+                                                                                addChild(aux,$4); 
+                                                                                addChild($$,aux);
+                                                                                addChild($$,aux2);
+                                                                                addChild($$,$6); }
+    | FOR ExprOpc LBRACE StatementSEMICOLON RBRACE {$$= create_node(FORE, "For", 0,0); 
+                                                    struct node_list *aux= create_node(BLOCK, "Block",0,0);
+                                                    addChild($$,$2); 
+                                                    addChild(aux, $4);
+                                                    addChild($$,aux);}
     | RETURN                                       {$$= create_node(RETURNE, "Return", 0,0);}
     | RETURN Expr                                  {$$= create_node(RETURNE, "Return", 0,0); addChild($$,$2);}
-    | FuncInvocation                              {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$1);}
-    | ParseArgs                                   {;$$= $1;}
+    | FuncInvocation                              {$$= create_node(CALL, "Call", 0,0); addChild($$,$1);}
+    | ParseArgs                                   {$$= $1;}
     | PRINT LPAR ExprSTRLITOpc RPAR               {$$= create_node(PRINTE, "Print", 0,0); addChild($$,$3);}
 ;
 
@@ -202,12 +213,12 @@ Expr: Expr OR Expr                                             {$$= create_node(
     |   Expr NE Expr                                           {$$= create_node(OPERATOR, "Ne", 0,0); addChild($$,$1); addChild($$,$3);}
     |   Expr LE Expr                                           {$$= create_node(OPERATOR, "Le", 0,0); addChild($$,$1); addChild($$,$3);}
     |   Expr GE Expr                                           {$$= create_node(OPERATOR, "Ge", 0,0); addChild($$,$1); addChild($$,$3);}
-    |   Expr PLUS Expr                                         {$$= create_node(OPERATOR, "Plus", 0,0); addChild($$,$1); addChild($$,$3);}
+    |   Expr PLUS Expr                                         {$$= create_node(OPERATOR, "Add", 0,0); addChild($$,$1); addChild($$,$3);}
     |   Expr MINUS Expr                                        {$$= create_node(OPERATOR, "Sub", 0,0); addChild($$,$1); addChild($$,$3);}
     |   Expr STAR Expr                                         {$$= create_node(OPERATOR, "Mul", 0,0); addChild($$,$1); addChild($$,$3);}
     |   Expr DIV Expr                                          {$$= create_node(OPERATOR, "Div", 0,0); addChild($$,$1); addChild($$,$3); }
     |   Expr MOD Expr                                          {$$= create_node(OPERATOR, "Mod", 0,0); addChild($$,$1); addChild($$,$3); }
-    |   MINUS Expr                                             {$$= create_node(OPERATOR, "Sub", 0,0); addChild($$,$2);}
+    |   MINUS Expr                                             {$$= create_node(OPERATOR, "Minus", 0,0); addChild($$,$2);}
     |   PLUS  Expr                                             {$$= create_node(OPERATOR, "Plus", 0,0); addChild($$,$2); }
     |   NOT  Expr                                              {$$= create_node(OPERATOR, "Not", 0,0); addChild($$,$2); }
     |   INTLIT                                                 {$$ = create_node(INTLITE,$1,0,0);}
