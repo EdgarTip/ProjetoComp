@@ -165,8 +165,9 @@ Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assi
                                                                                 addChild($$,$2); 
                                                                                 addChild(aux,$4); 
                                                                                 addChild($$,aux);
+                                                                                addChild(aux2,$6);
                                                                                 addChild($$,aux2);
-                                                                                addChild($$,$6); }
+                                                                                }
     | FOR ExprOpc LBRACE StatementSEMICOLON RBRACE {$$= create_node(FORE, "For", 0,0); 
                                                     struct node_list *aux= create_node(BLOCK, "Block",0,0);
                                                     addChild($$,$2); 
