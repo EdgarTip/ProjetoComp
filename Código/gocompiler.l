@@ -189,8 +189,8 @@ yylval.letters = strdup(yytext); return ID;}
 
 %%
 
-void yyerror (const char *s) { 
-     printf ("%s: %s\n", s, yytext);
+void yyerror ( char *s) { 
+     printf ("Line %d, column %d: %s: %s\n", num_line, num_column, s, yytext);
 }
 
 
