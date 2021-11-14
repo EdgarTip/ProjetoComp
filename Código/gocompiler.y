@@ -5,7 +5,7 @@
     int yylex(void);
     void yyerror (const char *s);
     char error = 0;
-    char flag;
+    extern char flag;
     
 %}
 
@@ -180,7 +180,7 @@ Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assi
     | FuncInvocation                              {$$= create_node(CALL, "Call", 0,0); addChild($$,$1);}
     | ParseArgs                                   {$$= $1;}
     | PRINT LPAR ExprSTRLITOpc RPAR               {$$= create_node(PRINTE, "Print", 0,0); addChild($$,$3);}
-    | error                                       {;}
+    | error                                       {$$=NULL; error = 1;}
 ;
 
 ExprSTRLITOpc: Expr         {$$= $1;}
@@ -203,11 +203,11 @@ StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {$$=$1; add_next($$,$
 ParseArgs: ID COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR  {$$= create_node(PARSEARGS, "ParseArgs", 0,0); 
                                                                             addChild($$,create_node(IDE, $1,0,0)); 
                                                                             addChild($$,$9);}
-    |   ID COMMA BLANKID ASSIGN PARSEINT LPAR error RPAR  {;}
+    |   ID COMMA BLANKID ASSIGN PARSEINT LPAR error RPAR  {$$=NULL; error = 1;}
     ;
 
 FuncInvocation: ID LPAR OpcExpr RPAR                                {$$=  create_node(IDE, $1, 0, 0); add_next($$,$3);}
-    |   ID LPAR error RPAR                                          {;}
+    |   ID LPAR error RPAR                                          {$$=NULL; error = 1;}
     ;
 
 OpcExpr: Expr CommaExpr                                             {$$= $1; add_next($$,$2);}
@@ -239,7 +239,7 @@ Expr: Expr OR Expr                                             {$$= create_node(
     |   ID                                                     {$$ = create_node(IDE,$1,0,0);}
     |   FuncInvocation                                         {$$= create_node(CALL, "Call", 0,0); addChild($$,$1);}
     |   LPAR Expr RPAR                                         {$$ = $2;}
-    |   LPAR error RPAR                                        {;}
+    |   LPAR error RPAR                                        {$$=NULL; error = 1;}
     ;
 
 
