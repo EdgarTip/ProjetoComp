@@ -138,7 +138,7 @@ yylval.letters = strdup(yytext); return ID;}
 \r                                          {num_column = 1;}
 .                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column+= yyleng; last = 0;}
 \n                                          {num_line++; num_column = 1; if(last && check){printf("SEMICOLON\n");} if(last){ last = 0; return SEMICOLON;} }
-<INITIAL><<EOF>>                            {if(check && last) {printf("SEMICOLON\n"); BEGIN(SEMICOLOEND); return SEMICOLON;} BEGIN(REALLYEND); return END;}
+<INITIAL><<EOF>>                            {if(check && last) {printf("SEMICOLON\n");} if(last){BEGIN(SEMICOLOEND); return SEMICOLON;} BEGIN(REALLYEND); return END;}
 <SEMICOLOEND><<EOF>>                               {BEGIN(REALLYEND); return END;}
 <REALLYEND><<EOF>>                          {return 0;}
 

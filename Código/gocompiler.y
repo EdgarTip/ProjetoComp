@@ -67,8 +67,8 @@ Declarations: VarDeclaration SEMICOLON Declarations       {$$= $1; add_next($$,$
     |  /*empty*/                                                   {$$=NULL;}
     ;
 
-VarDeclaration: VAR VarSpec                                         {$$= create_node(VARDEC, "vardec", 0, 0); addChild($$, $2);}
-    |   VAR LPAR VarSpec SEMICOLON RPAR                             {$$= create_node(VARDEC, "vardec", 0, 0); addChild($$, $3);}
+VarDeclaration: VAR VarSpec                                         {$$= $2;}
+    |   VAR LPAR VarSpec SEMICOLON RPAR                             {$$=  $3;}
     ;
 
 VarSpec: ID CommaId Type                                            {$$= create_node(VARSPEC, "varspec", 0, 0);
@@ -86,13 +86,35 @@ Type: INT                                                           {$$= create_
     ;
 
 FuncDeclaration: FUNC ID LPAR Parameters RPAR Type FuncBody  {$$= create_node(FUNCDECL, "FuncDecl", 0, 0); 
-    addChild($$, create_node(IDE, $2, 0, 0)); addChild($$, $4); addChild($$, $6); addChild($$, $7);}
-    | FUNC ID LPAR RPAR Type FuncBody             {$$= create_node(FUNCDECL, "FuncDecl", 0, 0);
-        addChild($$, create_node(IDE, $2, 0, 0)); addChild($$, $5); addChild($$, $6);}
+                                                             struct node_list *aux= create_node(FUNCHEADER, "FuncHeader",0,0); 
+                                                             addChild(aux, create_node(IDE, $2, 0, 0)); 
+                                                             addChild(aux, $4); 
+                                                             addChild($$, aux); 
+                                                             addChild($$, $6); 
+                                                             addChild($$, $7);}
+
+    | FUNC ID LPAR RPAR Type FuncBody             {$$= create_node(FUNCDECL, "FuncDecl", 0, 0); 
+                                                        struct node_list *aux= create_node(FUNCHEADER, "FuncHeader",0,0); 
+                                                        addChild(aux, create_node(IDE, $2, 0, 0)); 
+                                                        addChild(aux, create_node(PARAMETERS, "FuncParams", 0, 0));
+                                                        addChild($$, aux); 
+                                                        addChild($$, $5); 
+                                                        addChild($$, $6);}
+                                                        
     | FUNC ID LPAR Parameters RPAR FuncBody        {$$= create_node(FUNCDECL, "FuncDecl", 0, 0);
-        addChild($$, create_node(IDE, $2, 0, 0)); addChild($$, $4); addChild($$, $6);}
+                                                        struct node_list *aux= create_node(FUNCHEADER, "FuncHeader",0,0); 
+                                                        addChild(aux, create_node(IDE, $2, 0, 0)); 
+                                                        addChild(aux, $4);
+                                                        addChild($$, aux);
+                                                        addChild($$, $6); 
+                                                       }
+
     | FUNC ID LPAR RPAR FuncBody                  {$$= create_node(FUNCDECL, "FuncDecl", 0, 0);
-        addChild($$, create_node(IDE, $2, 0, 0)); addChild($$, $5);}
+                                                        struct node_list *aux= create_node(FUNCHEADER, "FuncHeader",0,0); 
+                                                        addChild(aux, create_node(IDE, $2, 0, 0));
+                                                        addChild(aux, create_node(PARAMETERS, "FuncParams", 0, 0)); 
+                                                        addChild($$, aux);
+                                                        addChild($$, $5);}
 
 Parameters: ID Type                               {$$= create_node(PARAMETERS, "Parameters", 0, 0);
     addChild($$, create_node(IDE, $1, 0, 0)); addChild($$, $2);}
@@ -103,18 +125,19 @@ Parameters: ID Type                               {$$= create_node(PARAMETERS, "
 FuncBody: LBRACE VarsAndStatements RBRACE          {$$= create_node(FUNCBODY, "FuncBody", 0, 0); addChild($$, $2);}
 ;
 
-VarsAndStatements: VarsAndStatements VarsAndStatementsOpc SEMICOLON    {$$= create_node(VARSANDSTAT, "VarsAndStatements", 0, 0); addChild($$, $2); add_next($$, $1);}
+VarsAndStatements: VarsAndStatements VarsAndStatementsOpc SEMICOLON    {$$= $2; add_next($$, $1);}
     |                                             {$$=NULL;}
     ;
 
-VarsAndStatementsOpc: VarDeclaration              {$$= create_node(VARSANDSTATOPC, "VarsAndStatementsOPC", 0, 0); addChild($$, $1);}
-    | Statement                                       {$$= create_node(VARSANDSTATOPC, "VarsAndStatementsOPC", 0, 0); addChild($$, $1);}
+VarsAndStatementsOpc: VarDeclaration              {$$= $1;}
+    | Statement                                       {$$= $1;}
     |                                                 {$$ = NULL;}
     ;
 
-Statement: ID ASSIGN Expr                         {$$= create_node(STATEMENT, "Statement", 0,0); 
-    addChild($$,create_node(IDE, $1,0,0)); addChild($$,$3);}
-    | LBRACE StatementSEMICOLON RBRACE            {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$2);}
+Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assign", 0,0); 
+                                                        addChild($$,create_node(IDE, $1,0,0)); 
+                                                        addChild($$,$3);}
+    | LBRACE StatementSEMICOLON RBRACE            {$$= $2;}
     | IF Expr LBRACE StatementSEMICOLON RBRACE ElseLBraceStatementRbraceOpc   {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$2); addChild($$,$4); addChild($$,$6);}
     | FOR ExprOpc LBRACE StatementSEMICOLON RBRACE {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$2); addChild($$,$4);}
     | RETURN ExprOpc                              {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$2);}
@@ -136,7 +159,7 @@ ElseLBraceStatementRbraceOpc: ELSE LBRACE StatementSEMICOLON RBRACE {$$ = $3;}
 ;
 
 
-StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {$$=create_node(STATESEMI, "Statement Semicolon", 0,0);addChild($$,$1); addChild($$,$3);}
+StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {$$=$1; add_next($$,$1);}
     |                                                      {$$=NULL;}
 ;
 

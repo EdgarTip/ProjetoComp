@@ -112,8 +112,21 @@ void printTree(tree_list list, int depth){
         printf("..");
     }
     switch(list->node->class){
+        case IDE:
+            printf("Id(%s)\n", list->node->token->symbol);
+            break;
+        case REALLITE:
+            printf("RealLit(%s)\n", list->node->token->symbol);
+            break;
+        case STRINGE:
+            printf("String(%s)\n", list->node->token->symbol);
+            break;
+        case INTLITE:
+            printf("IntLit(%s)\n", list->node->token->symbol);
+            break;
         default:
             printf("%s\n", list->node->token->symbol);
+            break;
     }
 
     //Sees if it has childs
