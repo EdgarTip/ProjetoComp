@@ -88,10 +88,12 @@ extern int yydebug;
     IF = 294,
     FOR = 295,
     END = 296,
-    ID = 297,
-    REALLIT = 298,
-    INTLIT = 299,
-    STRLIT = 300
+    PLUSPLUS = 297,
+    MINUSMINUS = 298,
+    ID = 299,
+    REALLIT = 300,
+    INTLIT = 301,
+    STRLIT = 302
   };
 #endif
 /* Tokens.  */
@@ -134,22 +136,24 @@ extern int yydebug;
 #define IF 294
 #define FOR 295
 #define END 296
-#define ID 297
-#define REALLIT 298
-#define INTLIT 299
-#define STRLIT 300
+#define PLUSPLUS 297
+#define MINUSMINUS 298
+#define ID 299
+#define REALLIT 300
+#define INTLIT 301
+#define STRLIT 302
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 52 "gocompiler.y"
+#line 54 "gocompiler.y"
 
 int value;
 char* letters;
 struct node_list *node;
 
-#line 153 "y.tab.h"
+#line 157 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

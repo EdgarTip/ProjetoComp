@@ -10,6 +10,7 @@
     int last = 0;
     int initial_line = 0;
     int initial_column = 0;
+    char flag = '\0';
 
     char *ptr = NULL;
 
@@ -102,7 +103,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 "func"                                      {if(check) printf("FUNC\n"); num_column += yyleng; last = 0; return FUNC;}
 "os.Args"                                   {if(check) printf("CMDARGS\n"); num_column += yyleng; last = 0; return CMDARGS;}
 
-{reserved}                                  {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
+{reserved}                                  {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0; if (strcmp(yytext, "++")== 0) {return PLUSPLUS;}; if (strcmp(yytext, "--")== 0) {return MINUSMINUS;}}
 
 "=="                                        {if(check) printf("EQ\n"); num_column+=2; last = 0; return EQ;}
 ">="                                        {if(check) printf("GE\n"); num_column+=2; last = 0; return GE;}
@@ -189,8 +190,8 @@ yylval.letters = strdup(yytext); return ID;}
 
 %%
 
-void yyerror (const char *s) { 
-     printf ("%s: %s\n", s, yytext);
+void yyerror ( char *s) { 
+     printf ("Line %d, column %d: %s: %s\n", num_line, num_column, s, yytext);
 }
 
 
@@ -201,13 +202,28 @@ int yywrap()
 
 int main(int argc, char* argv[])
 {
-    if(argc == 2){
-        if(strcmp(argv[1], "-l") == 0){
-            check = 1;
+    if (argc == 2 && argv[1][0] == '-') {
+        int counter = 0;
+        while (argv[1][counter] != 0 && counter < 10) {
+            switch (argv[1][counter]) {
+                case 'l':
+                    check = 1;
+                    break;
+                case 't':
+                    flag = 't';
+                    break;
+
+            }
+            counter++;
         }
+
+    }
+    if (check == 1) {
+        yyparse();
+    } else if (flag == 't') {
+        yyparse();
     }
 
-    yyparse();
     return 0;
 }
 
