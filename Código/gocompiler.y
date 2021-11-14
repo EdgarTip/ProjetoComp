@@ -138,9 +138,10 @@ Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assi
                                                         addChild($$,create_node(IDE, $1,0,0)); 
                                                         addChild($$,$3);}
     | LBRACE StatementSEMICOLON RBRACE            {$$= $2;}
-    | IF Expr LBRACE StatementSEMICOLON RBRACE ElseLBraceStatementRbraceOpc   {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$2); addChild($$,$4); addChild($$,$6);}
+    | IF Expr LBRACE StatementSEMICOLON RBRACE ElseLBraceStatementRbraceOpc   {$$= create_node(IFE, "If", 0,0); addChild($$,$2); addChild($$,$4); printTree($$,0);addChild($$,$6); }
     | FOR ExprOpc LBRACE StatementSEMICOLON RBRACE {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$2); addChild($$,$4);}
-    | RETURN ExprOpc                              {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$2);}
+    | RETURN                                       {$$= create_node(RETURNE, "Return", 0,0); printf("YOOOOOOOO\n"); }
+    | RETURN Expr                                  {$$= create_node(RETURNE, "Return", 0,0); addChild($$,$2);}
     | FuncInvocation                              {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$1);}
     | ParseArgs                                   {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$1);}
     | PRINT LPAR ExprSTRLITOpc RPAR               {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$3);}
@@ -159,7 +160,7 @@ ElseLBraceStatementRbraceOpc: ELSE LBRACE StatementSEMICOLON RBRACE {$$ = $3;}
 ;
 
 
-StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {$$=$1; add_next($$,$1);}
+StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {$$=$1; add_next($$,$3);}
     |                                                      {$$=NULL;}
 ;
 
@@ -181,14 +182,14 @@ Expr: Expr OR Expr                                             {add_next($1,$3);
     |   Expr AND Expr                                          {add_next($1,$3); $$=$1;}
     |   Expr LT Expr                                           {add_next($1,$3); $$=$1;}
     |   Expr GT Expr                                           {add_next($1,$3); $$=$1;}
-    |   Expr EQ Expr                                           {add_next($1,$3); $$=$1;}
+    |   Expr EQ Expr                                           {$$= create_node(EQ, "Eq", 0,0); addChild($$,$1); addChild($$,$3); }
     |   Expr NE Expr                                           {add_next($1,$3); $$=$1;}
     |   Expr LE Expr                                           {add_next($1,$3); $$=$1;}
     |   Expr GE Expr                                           {add_next($1,$3); $$=$1;}
     |   Expr PLUS Expr                                         {add_next($1,$3); $$=$1;}
     |   Expr MINUS Expr                                        {add_next($1,$3); $$=$1;}
     |   Expr STAR Expr                                         {add_next($1,$3); $$=$1;}
-    |   Expr DIV Expr                                          {add_next($1,$3); $$=$1;}
+    |   Expr DIV Expr                                          {$$= create_node(MUL, "Mul", 0,0); addChild($$,$1); addChild($$,$3); }
     |   Expr MOD Expr                                          {add_next($1,$3); $$=$1;}
     |   MINUS Expr                                             {$$=$2;}
     |   PLUS  Expr                                             {$$=$2;}
@@ -196,7 +197,7 @@ Expr: Expr OR Expr                                             {add_next($1,$3);
     |   INTLIT                                                 {$$ = create_node(INTLITE,$1,0,0);}
     |   REALLIT                                                {$$ = create_node(REALLITE,$1,0,0);}
     |   ID                                                     {$$ = create_node(IDE,$1,0,0);}
-    |   FuncInvocation                                         {$$ = $1;}
+    |   FuncInvocation                                         {$$= create_node(CALL, "Call", 0,0);}
     |   LPAR Expr RPAR                                         {$$ = $2;}
     ;
 
