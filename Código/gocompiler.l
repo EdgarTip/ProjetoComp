@@ -96,7 +96,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 "int"                                       {if(check) printf("INT\n"); num_column += yyleng; last = 0; return INT;}
 "float32"                                   {if(check) printf("FLOAT32\n"); num_column += yyleng; last = 0; return FLOAT32;}
 "bool"                                      {if(check) printf("BOOL\n"); num_column += yyleng; last = 0; return BOOL;}
-"string"                                    {if(check) printf("STRINGT\n"); num_column += yyleng; last = 0; return STRINGT;}
+"string"                                    {if(check) printf("STRING\n"); num_column += yyleng; last = 0; return STRING;}
 "fmt.Println"                               {if(check) printf("PRINT\n"); num_column += yyleng; last = 0; return PRINT;}
 "strconv.Atoi"                              {if(check) printf("PARSEINT\n"); num_column += yyleng; last = 0; return PARSEINT;}
 "func"                                      {if(check) printf("FUNC\n"); num_column += yyleng; last = 0; return FUNC;}

@@ -118,7 +118,7 @@ void printTree(tree_list list, int depth){
         case REALLITE:
             printf("RealLit(%s)\n", list->node->token->symbol);
             break;
-        case STRINGE:
+        case STRLITE:
             printf("String(%s)\n", list->node->token->symbol);
             break;
         case INTLITE:
