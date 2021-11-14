@@ -9,7 +9,7 @@
     
 %}
 
-%token PACKAGE  SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT ASSIGN  BLANKID  PARSEINT CMDARGS LSQ RSQ OR AND LT GT EQ  NE LE GE PLUS MINUS STAR DIV MOD NOT   ELSE IF FOR END
+%token PACKAGE SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT ASSIGN  BLANKID  PARSEINT CMDARGS LSQ RSQ OR AND LT GT EQ  NE LE GE PLUS MINUS STAR DIV MOD NOT   ELSE IF FOR END PLUSPLUS MINUSMINUS
 
 %token<letters>ID REALLIT INTLIT STRLIT
 
@@ -60,7 +60,7 @@ struct node_list *node;
 %%
 
 
-Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "Program", 0, 0); addChild($$,$4); if (!error && flag == 't') printTree($$,0); freeTree($$);}
+Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "Program", 0, 0); addChild($$,$4); printf("%d: %c\n", error, flag); if (!error && flag == 't') printTree($$,0); freeTree($$);}
 ;
 
 

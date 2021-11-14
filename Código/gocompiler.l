@@ -103,7 +103,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 "func"                                      {if(check) printf("FUNC\n"); num_column += yyleng; last = 0; return FUNC;}
 "os.Args"                                   {if(check) printf("CMDARGS\n"); num_column += yyleng; last = 0; return CMDARGS;}
 
-{reserved}                                  {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0;}
+{reserved}                                  {if(check) printf("RESERVED(%s)\n", yytext); num_column += yyleng; last = 0; if (strcmp(yytext, "++")== 0) {return PLUSPLUS;}; if (strcmp(yytext, "--")== 0) {return MINUSMINUS;}}
 
 "=="                                        {if(check) printf("EQ\n"); num_column+=2; last = 0; return EQ;}
 ">="                                        {if(check) printf("GE\n"); num_column+=2; last = 0; return GE;}
