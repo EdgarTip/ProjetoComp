@@ -158,7 +158,10 @@ VarsAndStatementsOpc: VarDeclaration              {$$= $1;}
 Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assign", 0,0); 
                                                         addChild($$,create_node(IDE, $1,0,0)); 
                                                         addChild($$,$3);}
-    | LBRACE StatementSEMICOLON RBRACE            {$$= $2;}
+    | LBRACE StatementSEMICOLON RBRACE            {if(number_of_children($2) > 1){ 
+                                                    $$= create_node(BLOCK, "Block", 0 ,0);
+                                                    addChild($$,$2);
+                                                    } else{$$= $2;}}
     | IF Expr LBRACE StatementSEMICOLON RBRACE ElseLBraceStatementRbraceOpc   {$$= create_node(IFE, "If", 0,0); 
                                                                                 struct node_list *aux= create_node(BLOCK, "Block",0,0);
                                                                                 struct node_list *aux2= create_node(BLOCK, "Block",0,0);

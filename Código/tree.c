@@ -60,7 +60,7 @@ void add_max_next(tree_list new_node, tree_list next_node){
     new_node->next = next_node;
 }
 
-int number_childs(tree_list node){
+int number_of_children(tree_list node){
 
     if(node == NULL ) return 0;
 
