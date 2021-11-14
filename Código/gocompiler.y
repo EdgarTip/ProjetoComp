@@ -60,7 +60,7 @@ struct node_list *node;
 %%
 
 
-Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "Program", 0, 0); addChild($$,$4); printf("%d: %c\n", error, flag); if (!error && flag == 't') printTree($$,0); freeTree($$);}
+Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "Program", 0, 0); addChild($$,$4); if (!error && flag == 't') printTree($$,0); freeTree($$);}
 ;
 
 
