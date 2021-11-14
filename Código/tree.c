@@ -48,6 +48,19 @@ void add_next(tree_list new_node, tree_list next_node){
     new_node->next = next_node;
 }
 
+void add_max_next(tree_list new_node, tree_list next_node){
+    if(new_node == NULL || next_node == NULL){
+        return;
+    }
+
+    while(new_node->next != NULL){
+        new_node = new_node->next;
+    }
+    
+    new_node->next = next_node;
+}
+
+
 //Adds a new child to the tree
 void addChild(tree_list root, tree_list new_child){
 

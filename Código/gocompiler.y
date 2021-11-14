@@ -71,8 +71,10 @@ VarDeclaration: VAR VarSpec                                         {$$= $2;}
     |   VAR LPAR VarSpec SEMICOLON RPAR                             {$$=  $3;}
     ;
 
-VarSpec: ID CommaId Type                                            {$$= create_node(VARSPEC, "varspec", 0, 0);
-    addChild($$, create_node(IDE, $1, 0,0)); addChild($$, $2); addChild($$, $3);}
+VarSpec: ID CommaId Type                                            {$$= create_node(VARDEC, "VarDecl", 0, 0);
+                                                                    addChild($$, $3);
+                                                                    addChild($$, create_node(IDE, $1, 0,0)); 
+                                                                    addChild($$, $2); }
     ;
    
 CommaId: COMMA ID CommaId                                           {$$= create_node(IDE, $2, 0, 0); add_next($$, $3);}
@@ -136,13 +138,13 @@ Parameters: ID Type                               {$$= create_node(PARAMDECL, "P
 FuncBody: LBRACE VarsAndStatements RBRACE          {$$= create_node(FUNCBODY, "FuncBody", 0, 0); addChild($$, $2);}
 ;
 
-VarsAndStatements: VarsAndStatements VarsAndStatementsOpc SEMICOLON    {if($1 != NULL && $2 != NULL) add_next($1, $2);
+VarsAndStatements: VarsAndStatements VarsAndStatementsOpc SEMICOLON    {if($1 != NULL && $2 != NULL) add_max_next($1, $2);
  if($1 == NULL) $$ = $2; else $$ = $1; }
     |                                             {$$=NULL;}
     ;
 
-VarsAndStatementsOpc: VarDeclaration              {$$= $1;}
-    | Statement                                       {$$= $1;}
+VarsAndStatementsOpc: VarDeclaration              {printTree($1,0); $$= $1;}
+    | Statement                                       {printTree($1,0);$$= $1;}
     |                                                 {$$ = NULL;}
     ;
 
@@ -155,8 +157,8 @@ Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assi
     | RETURN                                       {$$= create_node(RETURNE, "Return", 0,0);}
     | RETURN Expr                                  {$$= create_node(RETURNE, "Return", 0,0); addChild($$,$2);}
     | FuncInvocation                              {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$1);}
-    | ParseArgs                                   {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$1);}
-    | PRINT LPAR ExprSTRLITOpc RPAR               {$$= create_node(STATEMENT, "Statement", 0,0); addChild($$,$3);}
+    | ParseArgs                                   {;$$= $1;}
+    | PRINT LPAR ExprSTRLITOpc RPAR               {$$= create_node(PRINTE, "Print", 0,0); addChild($$,$3);}
 ;
 
 ExprSTRLITOpc: Expr         {$$= $1;}
@@ -176,7 +178,9 @@ StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {$$=$1; add_next($$,$
     |                                                      {$$=NULL;}
 ;
 
-ParseArgs: ID COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR  {$$= create_node(PARSEARGS, "Parse Args", 0,0); addChild($$,create_node(IDE, $1,0,0)); addChild($$,$9);}
+ParseArgs: ID COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR  {$$= create_node(PARSEARGS, "ParseArgs", 0,0); 
+                                                                            addChild($$,create_node(IDE, $1,0,0)); 
+                                                                            addChild($$,$9);}
     ;
 
 FuncInvocation: ID LPAR OpcExpr RPAR                                {$$=  create_node(IDE, $1, 0, 0); add_next($$,$3);}
