@@ -72,12 +72,19 @@ VarDeclaration: VAR VarSpec                                         {$$= $2;}
     ;
 
 VarSpec: ID CommaId Type                                            {$$= create_node(VARDEC, "VarDecl", 0, 0);
-                                                                    addChild($$, $3);
+                                                                    add_next($$, $2);
                                                                     addChild($$, create_node(IDE, $1, 0,0)); 
-                                                                    addChild($$, $2); }
+                                                                    add_child_to_all($$, $3);
+                                                                    
+                                                                    
+                                                                    
+                                                                   
+                                                                     }
     ;
    
-CommaId: COMMA ID CommaId                                           {$$= create_node(IDE, $2, 0, 0); add_next($$, $3);}
+CommaId: COMMA ID CommaId                                           {$$= create_node(VARDEC, "VarDecl", 0, 0);
+                                                                    addChild($$,create_node(IDE, $2, 0, 0));
+                                                                    add_next($$, $3);}
     |                                                               {$$ = NULL;}
     ;
     
