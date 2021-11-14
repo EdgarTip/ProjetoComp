@@ -1,5 +1,5 @@
   //Edgar Duarte 2019216077 Rodrigo Ferreira   2019220060 .
-%X  STRINGT COMMENT OCTAL_ERROR
+%X  STRINGT COMMENT OCTAL_ERROR REALLYEND SEMICOLOEND
 %{
     #include <stdlib.h>
     #include "y.tab.h"
@@ -84,7 +84,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 
 \"                                          {BEGIN STRINGT; initializeBlock(); initial_column = num_column; num_column += yyleng; last = 1;}
-"/""/".*                                    {if(last && check){ printf("SEMICOLON\n"); return SEMICOLON;} num_column += yyleng; last = 0;}
+"/""/".*                                    {num_column += yyleng; last = 0; if(last && check){ printf("SEMICOLON\n"); last = 0; return SEMICOLON;} }
 "/""*"                                      {BEGIN COMMENT; initial_column = num_column; initial_line = num_line; num_column += yyleng;}
 
 "package"                                   {if(check) printf("PACKAGE\n"); num_column += yyleng; last = 0; return PACKAGE;}
@@ -137,9 +137,10 @@ yylval.letters = strdup(yytext); return ID;}
 \t                                          {num_column+= yyleng;}
 \r                                          {num_column = 1;}
 .                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column+= yyleng; last = 0;}
-\n                                          {num_line++; num_column = 1; if(last && check){printf("SEMICOLON\n"); return SEMICOLON;} last = 0; }
-<INITIAL><<EOF>>                            {if(check && last) {printf("SEMICOLON\n"); return SEMICOLON;} return END;}
-
+\n                                          {num_line++; num_column = 1; if(last && check){printf("SEMICOLON\n");} if(last){ last = 0; return SEMICOLON;} }
+<INITIAL><<EOF>>                            {if(check && last) {printf("SEMICOLON\n"); BEGIN(SEMICOLOEND); return SEMICOLON;} BEGIN(REALLYEND); return END;}
+<SEMICOLOEND><<EOF>>                               {BEGIN(REALLYEND); return END;}
+<REALLYEND><<EOF>>                          {return 0;}
 
 <STRINGT>"\""                                {BEGIN 0; if(check && string_error == 0) {
                                                         ptr[counter++] = '\0';
@@ -164,16 +165,21 @@ yylval.letters = strdup(yytext); return ID;}
 <STRINGT>\n                                  {printf("Line %d, column %d: unterminated string literal\n", num_line, initial_column);     
                                                 num_line++; 
                                                 num_column = 1; 
-                                                freeBlock(); 
-                                                BEGIN 0; last = 0;}   
+                                                freeBlock();
+                                                BEGIN 0; last = 0;
+                                                if(last){
+                                                    printf("SEMICOLON\n");
+                                                    return SEMICOLON;}}   
 
-<STRINGT><<EOF>>                             {printf("Line %d, column %d: unterminated string literal\n", num_line, initial_column); freeBlock(); return END;}
+<STRINGT><<EOF>>                             {printf("Line %d, column %d: unterminated string literal\n", num_line, initial_column); freeBlock(); if(last){printf("SEMICOLON"); BEGIN(SEMICOLOEND); return SEMICOLON;} BEGIN(REALLYEND); return END;}
+
+
 
 
 <COMMENT>"*""/"                             {BEGIN 0; num_column+= yyleng;}
-<COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, initial_column); return END;}
+<COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, initial_column); BEGIN(REALLYEND); return END;}
 <COMMENT>.                                  {num_column++;}
-<COMMENT>\n                                 {if(check && last){ printf("SEMICOLON\n"); return SEMICOLON;} last = 0; num_line++; num_column = 1; }
+<COMMENT>\n                                 {last = 0; num_line++; num_column = 1; if(check && last){ printf("SEMICOLON\n"); return SEMICOLON;} }
 
 
 
@@ -198,7 +204,6 @@ int main(int argc, char* argv[])
     }
 
     yyparse();
-    printf("poweuu tpweut\n");
     return 0;
 }
 

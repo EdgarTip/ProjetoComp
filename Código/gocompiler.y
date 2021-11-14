@@ -11,11 +11,17 @@
 
 %token<letters>ID REALLIT INTLIT STRLIT
 
+%left COMMA
+%left ASSIGN
+%left OR 
+%left AND 
 %left EQ GE GT LT LE NE
 %left PLUS MINUS
 %left STAR DIV MOD 
 %right NOT
-%right OR AND 
+
+%nonassoc LPAR RPAR 
+
 
 %type<node>Program
 %type<node>Declarations
@@ -52,11 +58,12 @@ struct node_list *node;
 %%
 
 
-Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "program", 0, 0); addChild($$, create_node(IDE, $2, 0,0)); addChild($$,$4); printf("HEREEE\n");printTree($$,0); freeTree($$);}
+Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "Program", 0, 0); addChild($$,$4); printTree($$,0); freeTree($$);}
 ;
 
-Declarations: VarDeclaration SEMICOLON Declarations       { $$= create_node(DECLARATION, "declaration", 0, 0); addChild($$, $1); addChild($$, $3); }
-    |   FuncDeclaration SEMICOLON Declarations            {$$= create_node(DECLARATION, "declaration", 0, 0); addChild($$, $1); addChild($$, $3);}
+
+Declarations: VarDeclaration SEMICOLON Declarations       {$$= $1; add_next($$,$3); }
+    |   FuncDeclaration SEMICOLON Declarations            {$$= $1; add_next($$,$3);}
     |  /*empty*/                                                   {$$=NULL;}
     ;
 

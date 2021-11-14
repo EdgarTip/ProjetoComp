@@ -60,7 +60,6 @@ void addChild(tree_list root, tree_list new_child){
     }
     else{
         tree_list current_child = root->node->children;
-        tree_list aux;
         while (current_child->next != NULL){
             current_child = current_child->next;
         }
@@ -113,8 +112,6 @@ void printTree(tree_list list, int depth){
         printf("..");
     }
     switch(list->node->class){
-        case INTLITE:
-            printf("%s\n", list->node->token->symbol);
         default:
             printf("%s\n", list->node->token->symbol);
     }
