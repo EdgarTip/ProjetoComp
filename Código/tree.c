@@ -48,6 +48,34 @@ void add_next(tree_list new_node, tree_list next_node){
     new_node->next = next_node;
 }
 
+void add_max_next(tree_list new_node, tree_list next_node){
+    if(new_node == NULL || next_node == NULL){
+        return;
+    }
+
+    while(new_node->next != NULL){
+        new_node = new_node->next;
+    }
+
+    new_node->next = next_node;
+}
+
+int number_childs(tree_list node){
+
+    if(node == NULL ) return 0;
+
+    int counter = 1;
+
+    while(node->next != NULL){
+        node = node->next;
+        counter++;
+    }
+
+    return counter;
+}
+
+
+
 //Adds a new child to the tree
 void addChild(tree_list root, tree_list new_child){
 
@@ -69,9 +97,41 @@ void addChild(tree_list root, tree_list new_child){
 }
 
 
+void addChildStart(tree_list root, tree_list new_child){
+    if(new_child == NULL){
+        return;
+    }
+
+    if(root->node->children == NULL){
+        root->node->children = new_child;
+    }
+    else{
+        tree_list current_child = root->node->children;
+        root->node->children = new_child;
+
+        new_child->next = current_child;
+    }
+}
+
+
+void add_child_to_all(tree_list root, tree_list child){
+    if(root == NULL || child == NULL){
+        return;
+    }
+
+
+    tree_list aux = root;
+    while(aux != NULL){
+        tree_list aux2 = create_node(child->node->class, child->node->token->symbol, 0,0);
+        addChildStart(aux, aux2);
+        aux = aux->next;
+
+    }
+}
+
+
 //Frees the resources allocated during the creation of the program
 void freeTree(tree_list root){
-
     if(root == NULL){
         return;
     }
@@ -118,8 +178,8 @@ void printTree(tree_list list, int depth){
         case REALLITE:
             printf("RealLit(%s)\n", list->node->token->symbol);
             break;
-        case STRINGE:
-            printf("String(%s)\n", list->node->token->symbol);
+        case STRLITE:
+            printf("StrLit(%s)\n", list->node->token->symbol);
             break;
         case INTLITE:
             printf("IntLit(%s)\n", list->node->token->symbol);

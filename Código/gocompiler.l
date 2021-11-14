@@ -84,7 +84,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 
 
 \"                                          {BEGIN STRINGT; initializeBlock(); initial_column = num_column; num_column += yyleng; last = 1;}
-"/""/".*                                    {num_column += yyleng; last = 0; if(last && check){ printf("SEMICOLON\n"); last = 0; return SEMICOLON;} }
+"/""/".*                                    {num_column += yyleng; if(last && check){ printf("SEMICOLON\n");} if(last){last = 0; return SEMICOLON;} }
 "/""*"                                      {BEGIN COMMENT; initial_column = num_column; initial_line = num_line; num_column += yyleng;}
 
 "package"                                   {if(check) printf("PACKAGE\n"); num_column += yyleng; last = 0; return PACKAGE;}
@@ -96,7 +96,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
 "int"                                       {if(check) printf("INT\n"); num_column += yyleng; last = 0; return INT;}
 "float32"                                   {if(check) printf("FLOAT32\n"); num_column += yyleng; last = 0; return FLOAT32;}
 "bool"                                      {if(check) printf("BOOL\n"); num_column += yyleng; last = 0; return BOOL;}
-"string"                                    {if(check) printf("STRINGT\n"); num_column += yyleng; last = 0; return STRINGT;}
+"string"                                    {if(check) printf("STRING\n"); num_column += yyleng; last = 0; return STRING;}
 "fmt.Println"                               {if(check) printf("PRINT\n"); num_column += yyleng; last = 0; return PRINT;}
 "strconv.Atoi"                              {if(check) printf("PARSEINT\n"); num_column += yyleng; last = 0; return PARSEINT;}
 "func"                                      {if(check) printf("FUNC\n"); num_column += yyleng; last = 0; return FUNC;}
@@ -145,8 +145,12 @@ yylval.letters = strdup(yytext); return ID;}
 <STRINGT>"\""                                {BEGIN 0; if(check && string_error == 0) {
                                                         ptr[counter++] = '\0';
                                                         printf("STRLIT(\"%s\")\n", ptr);
-                                                        return STRLIT;
+                                                        
                                                         }
+                                                    if(string_error == 0){
+                                                        yylval.letters = strdup(ptr);
+                                                        return STRLIT;
+                                                    }
                                                     freeBlock();
                                                     num_column+= yyleng; }
 
@@ -179,7 +183,7 @@ yylval.letters = strdup(yytext); return ID;}
 <COMMENT>"*""/"                             {BEGIN 0; num_column+= yyleng;}
 <COMMENT><<EOF>>                            {printf("Line %d, column %d: unterminated comment\n", initial_line, initial_column); BEGIN(REALLYEND); return END;}
 <COMMENT>.                                  {num_column++;}
-<COMMENT>\n                                 {last = 0; num_line++; num_column = 1; if(check && last){ printf("SEMICOLON\n"); return SEMICOLON;} }
+<COMMENT>\n                                 {last = 0; num_line++; num_column = 1; if(check && last){ printf("SEMICOLON\n");} if(last){return SEMICOLON;} }
 
 
 
