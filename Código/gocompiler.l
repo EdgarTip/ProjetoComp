@@ -85,7 +85,7 @@ reserved                         "break"|"default"|"interface"|"select"|"case"|"
  
 
 
-\"                                          {BEGIN STRINGT; initializeBlock(); initial_column = num_column; num_column += yyleng; last = 1;}
+\"                                          {BEGIN STRINGT; initializeBlock(); initial_column = num_column; num_column += yyleng;}
 "/""/".*                                    {num_column += yyleng; if(last && check){ printf("SEMICOLON\n");} if(last){last = 0; if(check2)return SEMICOLON;} }
 "/""*"                                      {BEGIN COMMENT; initial_column = num_column; initial_line = num_line; num_column += yyleng;}
 
@@ -138,21 +138,25 @@ yylval.letters = strdup(yytext); if(check2)return ID;}
 " "                                         {num_column++;}
 \t                                          {num_column+= yyleng;}
 \r                                          {num_column = 1;}
-.                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column+= yyleng; last = 0;}
+.                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column+= yyleng;}
 \n                                          {num_line++; num_column = 1; if(last && check){printf("SEMICOLON\n");} if(last){ last = 0; if(check2)return SEMICOLON;} }
 <INITIAL><<EOF>>                            {if(check && last) {printf("SEMICOLON\n");} if(last && check2){BEGIN(SEMICOLOEND); return SEMICOLON;} if(check2){BEGIN(REALLYEND); return END;} return 0;}
 <SEMICOLOEND><<EOF>>                               {BEGIN(REALLYEND); return END;}
 <REALLYEND><<EOF>>                          {return 0;}
 
 <STRINGT>"\""                                {BEGIN 0;ptr[counter++] = '\0';
-                                                    if(check && string_error == 0) { printf("STRLIT(\"%s\")\n", ptr); }
+                                                    if(check && string_error == 0) { 
+                                                        last = 1;
+                                                        printf("STRLIT(\"%s\")\n", ptr); }
                                                         
                                                     if(string_error == 0 && check2){
+                                                        last = 1;
                                                         yylval.letters = strdup(ptr);
                                                         freeBlock();
                                                         num_column+= yyleng;
                                                         return STRLIT;
                                                     }
+                                                    
                                                     freeBlock();
                                                     num_column+= yyleng; }
 
@@ -164,7 +168,7 @@ yylval.letters = strdup(yytext); if(check2)return ID;}
 
 <STRINGT>\\\"                                {ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\"'; checkBlock(); num_column+= yyleng;}
 <STRINGT>"\\\\"                              {ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\\'; checkBlock(); num_column+= yyleng;}                                                    
-<STRINGT>\\[^fnrt]?                          {printf("Line %d, column %d: invalid escape sequence (%c%c)\n", num_line, num_column, *yytext, *(yytext+1)); string_error = 1; num_column += yyleng; last = 0;}
+<STRINGT>\\[^fnrt]?                          {printf("Line %d, column %d: invalid escape sequence (%c%c)\n", num_line, num_column, *yytext, *(yytext+1)); string_error = 1; num_column += yyleng;}
 
 <STRINGT>.                                   {ptr[counter++] = *yytext; checkBlock(); num_column++;}
 
@@ -174,6 +178,7 @@ yylval.letters = strdup(yytext); if(check2)return ID;}
                                                 freeBlock();
                                                 BEGIN 0; 
                                                 if(last && check){
+                                                    
                                                     printf("SEMICOLON\n");
                                                 }
                                                 if(last && check2){
