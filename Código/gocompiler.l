@@ -144,11 +144,14 @@ yylval.letters = strdup(yytext); if(check2)return ID;}
 <SEMICOLOEND><<EOF>>                               {BEGIN(REALLYEND); return END;}
 <REALLYEND><<EOF>>                          {return 0;}
 
-<STRINGT>"\""                                {BEGIN 0; if(check && string_error == 0) { printf("STRLIT(\"%s\")\n", ptr); }
-                                                        ptr[counter++] = '\0';
-                                                    if(string_error == 0){
+<STRINGT>"\""                                {BEGIN 0;ptr[counter++] = '\0';
+                                                    if(check && string_error == 0) { printf("STRLIT(\"%s\")\n", ptr); }
+                                                        
+                                                    if(string_error == 0 && check2){
                                                         yylval.letters = strdup(ptr);
-                                                        if(check2)return STRLIT;
+                                                        freeBlock();
+                                                        num_column+= yyleng;
+                                                        return STRLIT;
                                                     }
                                                     freeBlock();
                                                     num_column+= yyleng; }
