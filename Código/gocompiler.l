@@ -177,13 +177,7 @@ yylval.letters = strdup(yytext); if(check2)return ID;}
                                                 num_column = 1; 
                                                 freeBlock();
                                                 BEGIN 0; 
-                                                if(last && check){
-                                                    
-                                                    printf("SEMICOLON\n");
-                                                }
-                                                if(last && check2){
-                                                    return SEMICOLON;
-                                                }   
+                                                
                                                 last = 0;
                                                 }
 
