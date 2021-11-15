@@ -148,19 +148,24 @@ FuncBody: LBRACE VarsAndStatements RBRACE          {$$= create_node(FUNCBODY, "F
 ;
 
 VarsAndStatements: VarsAndStatements VarsAndStatementsOpc SEMICOLON    {if($1 != NULL && $2 != NULL) add_max_next($1, $2);
- if($1 == NULL) $$ = $2; else $$ = $1; }
+ if($1 == NULL) $$ = $2; else $$ = $1;}
     |                                             {$$=NULL;}
     ;
 
 VarsAndStatementsOpc: VarDeclaration              {$$= $1;}
-    | Statement                                       {$$= $1;}
-    |                                                 {$$ = NULL;}
+    | Statement                                   {$$= $1;  }
+    |  /*empty*/                                               {$$ = NULL;}
     ;
 
 Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assign", 0,0); 
                                                         addChild($$,create_node(IDE, $1,0,0)); 
-                                                        addChild($$,$3);}
-    | LBRACE StatementSEMICOLON RBRACE            {$$= $2;}
+                                                        addChild($$,$3);
+                                                        
+                                                        }
+    | LBRACE StatementSEMICOLON RBRACE            {if(number_of_children($2) > 1){ 
+                                                    $$= create_node(BLOCK, "Block", 0 ,0);
+                                                    addChild($$,$2);
+                                                    } else{$$= $2;}}
     | IF Expr LBRACE StatementSEMICOLON RBRACE ElseLBraceStatementRbraceOpc   {$$= create_node(IFE, "If", 0,0); 
                                                                                 struct node_list *aux= create_node(BLOCK, "Block",0,0);
                                                                                 struct node_list *aux2= create_node(BLOCK, "Block",0,0);
@@ -196,7 +201,7 @@ ElseLBraceStatementRbraceOpc: ELSE LBRACE StatementSEMICOLON RBRACE {$$ = $3;}
 ;
 
 
-StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {$$=$1; add_next($$,$3);}
+StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {if($1 != NULL){$$=$1; add_next($$,$3);}else $$ = $3;}
     |                                                      {$$=NULL;}
 ;
 

@@ -35,5 +35,5 @@ void freeTree(tree_list root);
 void printTree(tree_list node, int depth);
 void add_next(tree_list new_node, tree_list next_node);
 void add_max_next(tree_list new_node, tree_list next_node);
-int number_childs(tree_list node);
+int number_of_children(tree_list node);
 void add_child_to_all(tree_list root, tree_list child);
