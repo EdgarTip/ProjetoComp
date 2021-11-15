@@ -5,7 +5,7 @@
     int yylex(void);
     void yyerror (const char *s);
     char error = 0;
-    extern char flag;
+    extern int check2;
     
 %}
 
@@ -60,7 +60,7 @@ struct node_list *node;
 %%
 
 
-Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "Program", 0, 0); addChild($$,$4); if (!error && flag == 't') printTree($$,0); freeTree($$);}
+Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "Program", 0, 0); addChild($$,$4); if (!error) printTree($$,0); freeTree($$);}
 ;
 
 
