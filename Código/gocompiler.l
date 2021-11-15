@@ -143,11 +143,8 @@ yylval.letters = strdup(yytext); return ID;}
 <SEMICOLOEND><<EOF>>                               {BEGIN(REALLYEND); return END;}
 <REALLYEND><<EOF>>                          {return 0;}
 
-<STRINGT>"\""                                {BEGIN 0; if(check && string_error == 0) {
+<STRINGT>"\""                                {BEGIN 0; if(check && string_error == 0) { printf("STRLIT(\"%s\")\n", ptr); }
                                                         ptr[counter++] = '\0';
-                                                        printf("STRLIT(\"%s\")\n", ptr);
-                                                        
-                                                        }
                                                     if(string_error == 0){
                                                         yylval.letters = strdup(ptr);
                                                         return STRLIT;
@@ -155,17 +152,17 @@ yylval.letters = strdup(yytext); return ID;}
                                                     freeBlock();
                                                     num_column+= yyleng; }
 
-<STRINGT>\\f                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock();} num_column+= yyleng;}
-<STRINGT>\\n                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock();} num_column+= yyleng;}
-<STRINGT>\\r                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'r'; checkBlock();} num_column+= yyleng;}
-<STRINGT>\\t                                 {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 't'; checkBlock();} num_column+= yyleng;}
+<STRINGT>\\f                                 {ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'f'; checkBlock(); num_column+= yyleng;}
+<STRINGT>\\n                                 {ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'n'; checkBlock(); num_column+= yyleng;}
+<STRINGT>\\r                                 {ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 'r'; checkBlock(); num_column+= yyleng;}
+<STRINGT>\\t                                 {ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = 't'; checkBlock(); num_column+= yyleng;}
 <STRINGT>\\\r                                 {printf("Line %d, column %d: invalid escape sequence (%c)\n", num_line, num_column, *yytext); string_error = 1; num_column += yyleng;}
 
-<STRINGT>\\\"                                {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\"'; checkBlock();} num_column+= yyleng;}
-<STRINGT>"\\\\"                              {if(check) { ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\\'; checkBlock();} num_column+= yyleng;}                                                    
+<STRINGT>\\\"                                {ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\"'; checkBlock(); num_column+= yyleng;}
+<STRINGT>"\\\\"                              {ptr[counter++] = '\\'; checkBlock(); ptr[counter++] = '\\'; checkBlock(); num_column+= yyleng;}                                                    
 <STRINGT>\\[^fnrt]?                          {printf("Line %d, column %d: invalid escape sequence (%c%c)\n", num_line, num_column, *yytext, *(yytext+1)); string_error = 1; num_column += yyleng; last = 0;}
 
-<STRINGT>.                                   {if(check) ptr[counter++] = *yytext; checkBlock(); num_column++;}
+<STRINGT>.                                   {ptr[counter++] = *yytext; checkBlock(); num_column++;}
 
 <STRINGT>\n                                  {printf("Line %d, column %d: unterminated string literal\n", num_line, initial_column);     
                                                 num_line++; 
