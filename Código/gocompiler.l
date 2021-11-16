@@ -1,5 +1,5 @@
   //Edgar Duarte 2019216077 Rodrigo Ferreira   2019220060 .
-%X  STRINGT COMMENT OCTAL_ERROR REALLYEND SEMICOLOEND
+%X  STRINGT COMMENT OCTAL_ERROR REALLYEND SEMICOLOEND 
 %{
     #include <stdlib.h>
     #include "y.tab.h"
@@ -11,6 +11,11 @@
     int last = 0;
     int initial_line = 0;
     int initial_column = 0;
+
+    extern int error_num_line;
+    extern int error_num_column;
+
+    extern int error;
     
 
     char *ptr = NULL;
@@ -47,6 +52,30 @@
         }
     }
 
+    /* update the num_line, num_column, last_num_line and last_num_column
+       option chooses the behavior: option=
+       0 -> num_column += yylength;
+       1 -> num_line++;
+       2 -> num_column = 1;
+       3 -> num_line++; num_column = 1;*/
+    void update_position(int yylength, int option) {
+        //printf("Current: %d__%d    Last: %d__%d    Last2: %d__%d\n", num_line, num_column, last_num_line, last_num_column, last2_num_line, last2_num_column);
+        last2_num_line = last_num_line;
+        last2_num_column = last_num_column;
+        
+        last_num_line = num_line;
+        last_num_column = num_column;
+        
+        if (option == 0) num_column += yylength;
+        else if (option == 1) num_line++;
+        else if (option == 2) num_column = 1;
+        else if (option == 3) {
+            num_line++; 
+            num_column = 1;
+        }
+
+    }
+
 %}
 
 
@@ -66,6 +95,8 @@ hexaNum                         ((_)?{hexaN})+
 octalNum                        ((_)?{octalN})+
 
 reserved                         "break"|"default"|"interface"|"select"|"case"|"defer"|"go"|"map"|"struct"|"chan"|"goto"|"switch"|"const"|"fallthrough"|"range"|"type"|"continue"|"import"|"++"|"--"
+
+newLine                         ["\r\n""\n""\r"]
 
 %%
 
@@ -137,9 +168,9 @@ yylval.letters = strdup(yytext); if(check2)return ID;}
 
 " "                                         {num_column++;}
 \t                                          {num_column+= yyleng;}
-\r                                          {num_column = 1;}
+\r                                          {;}
 .                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); num_column+= yyleng;}
-\n                                          {num_line++; num_column = 1; if(last && check){printf("SEMICOLON\n");} if(last){ last = 0; if(check2)return SEMICOLON;} }
+\n                                          {if(last && check){printf("SEMICOLON\n");} if(last){ last = 0; if(check2) {num_line++; num_column = 1; return SEMICOLON;}} printf("Error: %d", error); num_line++; num_column = 1;}
 <INITIAL><<EOF>>                            {if(check && last) {printf("SEMICOLON\n");} if(last && check2){BEGIN(SEMICOLOEND); return SEMICOLON;} if(check2){BEGIN(REALLYEND); return END;} return 0;}
 <SEMICOLOEND><<EOF>>                               {BEGIN(REALLYEND); return END;}
 <REALLYEND><<EOF>>                          {return 0;}
@@ -196,7 +227,8 @@ yylval.letters = strdup(yytext); if(check2)return ID;}
 %%
 
 void yyerror ( char *s) { 
-     printf ("Line %d, column %d: %s: %s\n", num_line, num_column, s, yytext);
+    if (error == 0) printf ("Line %d, column %d: %s: %s\n", num_line, num_column, s, yytext);
+    else printf ("Line %d, column %d: %s: %s\n", num_line, num_column - yyleng, s, yytext);
 }
 
 
