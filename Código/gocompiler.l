@@ -117,7 +117,7 @@ newLine                         ["\r\n""\n""\r"]
  
 
 
-\"                                          {BEGIN STRINGT; initializeBlock(); initial_column = num_column; update_position(yyleng, 0);}
+\"                                          {BEGIN STRINGT; initializeBlock(); initial_line = num_line; initial_column = num_column; update_position(yyleng, 0);}
 "/""/".*                                    {update_position(yyleng, 0); if(last && check){ printf("SEMICOLON\n");} if(last){last = 0; if(check2)return SEMICOLON;} }
 "/""*"                                      {BEGIN COMMENT; initial_column = num_column; initial_line = num_line; update_position(yyleng, 0);}
 
@@ -230,7 +230,10 @@ newLine                         ["\r\n""\n""\r"]
 %%
 
 void yyerror ( char *s) { 
-    printf ("Line %d, column %d: %s: %s\n", num_line, num_column, s, yytext);
+    if (strcmp(yytext, "\"") == 0) {
+        // syntax error: "
+        printf ("Line %d, column %d: %s: \"%s\"\n", initial_line, initial_column, s, yylval.letters);
+    } else printf ("Line %d, column %d: %s: %s\n", last_num_line, last_num_column, s, yytext);
 }
 
 

@@ -1,21 +1,36 @@
-// for this program, your compiler should produce
-// the same four errors as the standard Go compiler
 
-package main;
+package main
 
-var n int;
-var x float32;
+var (n int;)
 
-func f(n int) bool {
-    return (n > );
-};
+func danglingelse(n int) {
+	for {
+		n = 0;
+		return new
+		return
+	}
 
-func f2() {
-    f(&&);
-    n = n;
-    =;;
-};
+	for (n != 0) {
+		n = 0 == 1;
+		n = function()
+		{{return;};}
+		if 1 {
+			if(1){
+				n=0;
+			} else {
+				n=1
+			}
 
-func main() {
-    n,_ = strconv.Atoi(/);
-};
+		} else {
+		}
+		
+		function (n || x)
+		function (n, x)
+	}
+
+	n, _ = strconv.Atoi(os.Args[n])
+
+	fmt.Println(n)
+	"aksjd"
+	fmt.Println("\x")
+}
