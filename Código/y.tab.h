@@ -147,7 +147,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 54 "gocompiler.y"
+#line 56 "gocompiler.y"
 
 int value;
 char* letters;
