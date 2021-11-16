@@ -1,40 +1,21 @@
--ID-
-ola _gosto de PaNdAs
-_ n0p3
-0zb
+// for this program, your compiler should produce
+// the same four errors as the standard Go compiler
 
--INTLIT-
-0 10 322412412312312312412412424
-0x1231 0x1231faca 0xFACA 0xFACAO
-012312 00000003 0123129 0131329123
+package main;
 
--REALLIT-
-1.3 1312313.123123 0021323.123123 0.32312
-.213123 123. 
-12e2 0.123e12 1.234e-12 1.234e+12
-123.0123e .e123
+var n int;
+var x float32;
 
--STRLIT-
-"abc" "abc \n \r" "gosto de pandas :) "
-" OL\"A " "" "//\t\t"
-"Esta string está mal \f\y" "Esta tamb\em"
-"Esta nao acaba
-mas acaba aqui?"
+func f(n int) bool {
+    return (n > );
+};
 
--ILLEGAL-
-. @ # ? ...
-01238 01239 0123ab
+func f2() {
+    f(&&);
+    n = n;
+    =;;
+};
 
--OPERADORES / KEYWORDS -
-|| ! , _ = * / - + > < % { ( [ ] ) }
-== != >= && =  package return else  for if 
-var int float32 bool string fmt.Println
-strconv.Atoi func os.Args import  
-interface case defer go map select
-struct  chan goto switch const fallthrough range 
-type continue import ++ -- ;_break
-
--COMENTARIOS-
-//pandas são fofos and you can't deny it :)
-/*o comentário acima é um facto*/
-/*Comentário errado que não acaba :(
+func main() {
+    n,_ = strconv.Atoi(/);
+};
