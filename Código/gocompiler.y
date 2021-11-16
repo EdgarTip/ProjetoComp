@@ -70,8 +70,8 @@ Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "Pro
 ;
 
 
-Declarations: VarDeclaration SEMICOLON Declarations       {$$= $1; add_next($$,$3); }
-    |   FuncDeclaration SEMICOLON Declarations            {$$= $1; add_next($$,$3);}
+Declarations: VarDeclaration SEMICOLON Declarations       {$$= $1; add_max_next($$,$3); }
+    |   FuncDeclaration SEMICOLON Declarations            {$$= $1; add_max_next($$,$3);}
     |  /*empty*/                                                   {$$=NULL;}
     ;
 
