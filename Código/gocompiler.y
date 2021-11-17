@@ -28,6 +28,7 @@
 %left STAR DIV MOD 
 %right NOT
 
+%nonassoc UNARY
 %nonassoc LPAR RPAR 
 
 

@@ -2,7 +2,8 @@ package main;
 
 func main() {
 
-    a = --x
+    x =  (((1+2))
 
+    )
 
 }
