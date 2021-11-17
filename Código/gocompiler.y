@@ -28,7 +28,9 @@
 %left STAR DIV MOD 
 %right NOT
 
+%nonassoc UNARY
 %nonassoc LPAR RPAR 
+
 
 
 %type<node>Program
@@ -242,8 +244,8 @@ Expr: Expr OR Expr                                             {$$= create_node(
     |   Expr STAR Expr                                         {$$= create_node(OPERATOR, "Mul", num_line, num_column); addChild($$,$1); addChild($$,$3);}
     |   Expr DIV Expr                                          {$$= create_node(OPERATOR, "Div", num_line, num_column); addChild($$,$1); addChild($$,$3); }
     |   Expr MOD Expr                                          {$$= create_node(OPERATOR, "Mod", num_line, num_column); addChild($$,$1); addChild($$,$3); }
-    |   MINUS Expr                                             {$$= create_node(OPERATOR, "Minus", num_line, num_column); addChild($$,$2);}
-    |   PLUS  Expr                                             {$$= create_node(OPERATOR, "Plus", num_line, num_column); addChild($$,$2); }
+    |   MINUS Expr  %prec UNARY                                {$$= create_node(OPERATOR, "Minus", num_line, num_column); addChild($$,$2);}
+    |   PLUS  Expr  %prec UNARY                                {$$= create_node(OPERATOR, "Plus", num_line, num_column); addChild($$,$2); }
     |   NOT  Expr                                              {$$= create_node(OPERATOR, "Not", num_line, num_column); addChild($$,$2); }
     |   INTLIT                                                 {$$ = create_node(INTLITE,$1, num_line, num_column);}
     |   REALLIT                                                {$$ = create_node(REALLITE,$1, num_line, num_column);}
