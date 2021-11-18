@@ -14,11 +14,6 @@
 
     int last_num_column = 0;
     int last_num_line = 0;
-
-    extern int error_num_line;
-    extern int error_num_column;
-
-    extern int error;
     
 
     char *ptr = NULL;
@@ -62,7 +57,6 @@
        2 -> num_column = 1;
        3 -> num_line++; num_column = 1;*/
     void update_position(int yylength, int option) {
-        //printf("Current: %d__%d    Last: %d__%d\n", num_line, num_column, last_num_line, last_num_column);
         
         last_num_line = num_line;
         last_num_column = num_column;

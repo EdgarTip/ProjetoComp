@@ -9,14 +9,22 @@
 #
 #  Flags
 #  -c apagar os ficheiros *casotest*.out_temp após correr cada caso de teste
+#
+#   Comandos:
+#       lex gocompiler.l && yacc -d -v  gocompiler.y && clang-7 lex.yy.c y.tab.c tree.c -o gocompiler
+#       ./test.sh
+#  
+#  If 'syntax error near unexpected token `$'do\r''':
+#       command:     dos2unix test.sh
+#        may need: sudo apt install dos2unix
 
-dgos=`ls *.dgo`
+dgos=`ls ./meta2/*.dgo`
 for ef in $dgos
 do
    echo "$ef"
    A=${ef//\.dgo/.out_temp}
    B=${ef//\.dgo/.out}
-   gocompiler -l < $ef > $A
+   ./gocompiler -t < $ef > $A
    diff $A $B
    if test ! -z $1 && test $1 = "-c"; then
       rm -Rf $A

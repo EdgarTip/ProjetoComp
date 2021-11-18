@@ -199,9 +199,3 @@ void printTree(tree_list list, int depth){
     }
 
 }
-/*
-int find_last_node(tree_list root) {
-    for(;root->next != NULL; root = root->next);
-    printf("")
-
-}*/

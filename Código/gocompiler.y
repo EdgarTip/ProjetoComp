@@ -9,9 +9,6 @@
 
     extern int num_line;
     extern int num_column;
-    
-    int error_num_line = 0;
-    int error_num_column = 0;
 
 %}
 
@@ -193,7 +190,7 @@ Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assi
     | FuncInvocation                              {$$= create_node(CALL, "Call", num_line, num_column); addChild($$,$1);}
     | ParseArgs                                   {$$= $1;}
     | PRINT LPAR ExprSTRLITOpc RPAR               {$$= create_node(PRINTE, "Print", num_line, num_column); addChild($$,$3);}
-    | error                                       {$$=NULL; /*printf("here1 %d__%d\n", num_line, num_column);*/ error = 1;}
+    | error                                       {$$=NULL; error = 1;}
 ;
 
 ExprSTRLITOpc: Expr         {$$= $1;}
@@ -216,11 +213,11 @@ StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {if($1 != NULL){$$=$1
 ParseArgs: ID COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR  {$$= create_node(PARSEARGS, "ParseArgs", num_line, num_column); 
                                                                             addChild($$,create_node(IDE, $1, num_line, num_column)); 
                                                                             addChild($$,$9);}
-    |   ID COMMA BLANKID ASSIGN PARSEINT LPAR error RPAR  {$$=NULL; /*printf("here2\n");*/ error = 1;}
+    |   ID COMMA BLANKID ASSIGN PARSEINT LPAR error RPAR  {$$=NULL; error = 1;}
     ;
 
 FuncInvocation: ID LPAR OpcExpr RPAR                                {$$=  create_node(IDE, $1, num_line, num_column); add_next($$,$3);}
-    |   ID LPAR error RPAR                                          {$$=NULL; /*printf("here3\n");*/ error = 1;}
+    |   ID LPAR error RPAR                                          {$$=NULL; error = 1;}
     ;
 
 OpcExpr: Expr CommaExpr                                             {$$= $1; add_next($$,$2);}
@@ -251,8 +248,8 @@ Expr: Expr OR Expr                                             {$$= create_node(
     |   REALLIT                                                {$$ = create_node(REALLITE,$1, num_line, num_column);}
     |   ID                                                     {$$ = create_node(IDE,$1, num_line, num_column);}
     |   FuncInvocation                                         {$$= create_node(CALL, "Call", num_line, num_column); addChild($$,$1);}
-    |   LPAR Expr RPAR                                         {/*printf("here133 %d__%d\n", num_line, num_column);*/$$ = $2;}
-    |   LPAR error RPAR                                        {$$=NULL; /*printf("here4\n"); printf("%d__%d\n", num_line, num_column);*/ error = 1;}
+    |   LPAR Expr RPAR                                         {$$ = $2;}
+    |   LPAR error RPAR                                        {$$=NULL; error = 1;}
     ;
 
 
