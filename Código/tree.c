@@ -1,7 +1,17 @@
 #include "tree.h"
+//--Tree--
+
+//Creates a token
+id_token create_token(char *value, int line, int col) {
+  id_token tok = malloc(sizeof(id_token));
+  tok->symbol = value;
+  tok->line = line;
+  tok->column = col;
+  return tok;
+}
 
 //Creates a new node
-tree_list create_node(enum class_name class, char *symbol, int line, int column ){
+tree_list create_node(enum class_name class, char *symbol, int line, int column, id_token tok){
 
     tree_list list = malloc(sizeof(tree_list));
 
@@ -20,19 +30,25 @@ tree_list create_node(enum class_name class, char *symbol, int line, int column 
             exit(0);
         } 
 
-    list->node->token = malloc(sizeof(struct token));
-
-    //If malloc fails
-    if (list->node->token == NULL && sizeof(struct token) > 0){
-        printf("MALLOC ERROR TOKEN\n");
-        //freeTree();
-        exit(0);
+    if(tok == NULL){
+        list->node->token = malloc(sizeof(struct token));
+        
+        //If malloc fails
+        if (list->node->token == NULL && sizeof(struct token) > 0){
+            printf("MALLOC ERROR TOKEN\n");
+            //freeTree();
+            exit(0);
     } 
 
+        list->node->token->symbol = symbol;
+        list->node->token->line = line;
+        list->node->token->column = column;
+    }
+    else{
+        list->node->token = tok;
+    }
+
     list->next = NULL;
-    list->node->token->symbol = symbol;
-    list->node->token->line = line;
-    list->node->token->column = column;
     list->node->class = class;
     list->node->children = NULL;
 
@@ -122,7 +138,7 @@ void add_child_to_all(tree_list root, tree_list child){
 
     tree_list aux = root;
     while(aux != NULL){
-        tree_list aux2 = create_node(child->node->class, child->node->token->symbol, 0,0);
+        tree_list aux2 = create_node(child->node->class, child->node->token->symbol, 0,0, NULL);
         addChildStart(aux, aux2);
         aux = aux->next;
 
@@ -199,3 +215,6 @@ void printTree(tree_list list, int depth){
     }
 
 }
+
+
+//--Semantic Tables--

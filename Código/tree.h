@@ -7,6 +7,7 @@
 
 typedef struct node *tree_node;
 typedef struct node_list *tree_list;
+typedef struct token *id_token;
 
 enum class_name{PROGRAM, IDE, DECLARATION, VARDEC, VARSPEC, INTE, FLOAT32E, BOOLE, STRINGE, FUNCDECL, PARAMETERS, INTLITE, FUNCBODY, VARSANDSTAT, VARSANDSTATOPC, STATEMENT, STATESEMI, PARSEARGS, FUNCINVOCATION, REALLITE, STRLITE, FUNCHEADER, CALL, RETURNE, IFE,
 OPERATOR, PARAMDECL, PRINTE, BLOCK, FORE};
@@ -28,8 +29,8 @@ struct node_list{
     struct node_list *next;
 };
 
-
-tree_list create_node(enum class_name class, char *symbol, int line, int column );
+tree_list create_node(enum class_name class, char *symbol, int line, int column, id_token tok );
+id_token create_token(char *value, int  line, int column);
 void addChild(tree_list root, tree_list new_child);
 void freeTree(tree_list root);
 void printTree(tree_list node, int depth);
