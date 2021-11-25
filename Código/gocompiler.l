@@ -183,9 +183,10 @@ newLine                         ["\r\n""\n""\r"]
                                                         
                                                     if(string_error == 0 && check2){
                                                         last = 1;
-                                                        update_position(yyleng, 0);
+                                                        
                                                         yylval.id_token = create_token(strdup(ptr), initial_line, initial_column);
                                                         freeBlock();
+                                                        update_position(yyleng, 0);
                                                         return STRLIT;
                                                     }
                                                     
@@ -227,7 +228,7 @@ newLine                         ["\r\n""\n""\r"]
 void yyerror ( char *s) { 
     if (strcmp(yytext, "\"") == 0) {
         // syntax error: "
-        printf ("Line %d, column %d: %s: \"%s\"\n", initial_line, initial_column, s, yylval.letters);
+        printf ("Line %d, column %d: %s: \"%s\"\n", initial_line, initial_column, s, yylval.id_token->symbol);
     } else printf ("Line %d, column %d: %s: %s\n", last_num_line, last_num_column, s, yytext);
 }
 

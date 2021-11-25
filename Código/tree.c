@@ -1,4 +1,7 @@
 #include "tree.h"
+
+
+tab root_table = NULL;
 //--Tree--
 
 //Creates a token
@@ -218,3 +221,149 @@ void printTree(tree_list list, int depth){
 
 
 //--Semantic Tables--
+
+//Returns the root table
+void createAllTables(tree_list root, tab current_table){
+    if(root = NULL){
+        return;
+    }
+    switch(root->node->class){
+        case PROGRAM:
+            current_table = createTable(NULL, 1);
+            createAllTables(root->node->children, current_table);
+            break;
+
+        case FUNCDECL:
+            tree_list func_id = root->node->children->node->children;
+            tree_list func_type = func_id->next;
+
+            //Params
+            char *params;
+            tree_list func_param = func_type->next;
+
+            if(func_param->node->children != NULL){
+                int first = 1;
+                while(func_param != NULL){
+                    tree_list param_type = func_param->node->children;
+                    tree_list param_id = param_type->next;
+
+                    if(first){
+                        params = strcat(params, "(");
+                        params = strcat(params, param_type->node->token->symbol);
+                    }
+                    else{
+                        params = strcat(params, ",");
+                        params = strcat(params, param_type->node->token->symbol);
+                        
+                    }
+                    first = 0;
+                }
+                params = strcat(params, ")");
+            }
+            else{
+                params = "none";
+            }
+            //Insert new value into current table
+            if(!checkExists(current_table, func_id->node->token->symbol)){ 
+
+                instertElementTable(root_table, createElem(func_id->node->token->symbol, func_id->node->token->symbol, params));
+            }
+            else{
+                printf("Line %d, column %d: Symbol %s already defined\n", func_id->node->token->line, func_id->node->token->column, func_id->node->token->symbol);
+            }
+            break;
+
+        case VARDEC:
+            //Insert a new value to the table. Get the value of the brother of the child, type of the child and parameters are none
+            //VARDEC
+            tree_node dad_node = root->node;
+            //TYPE
+            tree_list child1 = dad_node->children;
+            //ID
+            tree_list child2 = child1->next;
+        
+            //Insert new value into current table
+            if(!checkExists(current_table, child2->node->token->symbol)){ 
+
+                instertElementTable(current_table, createElem(child2->node->token->symbol, child1->node->token->symbol, ""));
+            }
+
+            else{
+                printf("Line %d, column %d: Symbol %s already defined\n", child2->node->token->line, child2->node->token->column, child2->node->token->symbol);
+            }
+            createTable(root->next, current_table);
+            break;
+
+    }
+
+
+
+}
+
+
+//Insert a new element to a table
+void instertElementTable(tab table, elem_table element){
+    if(table->first_elem == NULL){
+        table->first_elem = element;
+        return;
+    }
+
+    elem_table aux = table->first_elem;
+
+    while(aux->next != NULL){
+        aux = aux->next;
+    }
+    aux->next = element;
+    
+    
+}
+
+//Create a new table. If it is the global one starts global table variable
+tab createTable(elem_table table_element, int is_global){
+
+    tab new_table = malloc(sizeof(tab));
+    if(!is_global){
+        new_table->first_elem= createElem("return", "", table_element->type);
+
+        char *str = strcat(table_element->value, table_element->parameters);
+        new_table->name = str;
+    }
+
+    if(root_table == NULL){
+        root_table = new_table;
+        return;
+    }
+    else{
+        tab aux = root_table;
+        while(aux->next != NULL){
+            aux = aux->next;
+        }
+        aux->next = new_table;
+    }
+}
+
+//Create a new element
+elem_table createElem(char *value,  char *type, char *parameter){
+    elem_table elem = malloc(sizeof(elem_table));
+
+    elem->value = value;
+    elem->type = type;
+    elem->parameters = parameter;
+    elem->next = NULL;
+
+    return elem;
+}
+
+
+int checkExists(tab table, char* name){
+    elem_table aux = table->first_elem;
+
+    while(aux != NULL){
+        if(strcmp(aux->value, name) == 0){
+            return 1;
+        }
+        aux = aux->next;
+    }
+    
+    return 0;
+}
