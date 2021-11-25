@@ -329,6 +329,22 @@ elem_table createElem(char *value,  char *type, param parameter, int is_param){
     return elem;
 }
 
+//Finds a table by its name. Returns NULL if table is not found
+tab findTable(tab root, char *name){
+
+    tab aux = root;
+
+    while(aux == NULL){
+
+        if(strcmp(aux->name, name) == 0){
+            return aux;
+        }
+
+        aux = aux->next;
+    }
+    return NULL;
+}
+
 //Create a new table. If it is the global one starts global table variable
 tab createTable(elem_table table_element, int is_global){
 
@@ -382,7 +398,6 @@ void funcBodyTable(tree_list root, tab table){
             else{
                 printf("Line %d, column %d: Symbol %s already defined\n", var_id->node->token->line, var_id->node->token->column, var_id->node->token->symbol);
             }
-            printf("HERE%s\n", var_id->node->token->symbol);
             if(root->next != NULL){
                 funcBodyTable(root->node->children, table);
             }
@@ -549,6 +564,34 @@ tab createAllTables(tree_list root){
 
     createAllTables(root->next);
     return root_table;
+
+
+}
+
+
+void create_ast_anotated( tree_list root, tab table){
+
+    if(root == NULL) return;
+
+    switch(root->node->class){
+        case FUNCDECL:
+        {
+            
+        }
+        default:
+        {   
+            if(root->node->children != NULL){
+                create_ast_anotated(root->node->children, table); 
+            }
+
+            if(root->next != NULL){
+                create_ast_anotated(root->node->children, table);
+            }
+            
+        }
+    }
+
+    return;
 
 
 }

@@ -23,6 +23,7 @@ struct token{
 
 struct node{
     enum class_name class;
+    char *type;
     struct token *token;
     struct node_list *children;
 };

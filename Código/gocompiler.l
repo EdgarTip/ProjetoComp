@@ -168,7 +168,7 @@ newLine                         ["\r\n""\n""\r"]
 \t                                          {update_position(yyleng, 0);}
 \r                                          {;}
 .                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); update_position(yyleng, 0);}
-\n                                          {if(last && check){printf("SEMICOLON\n");} 
+\r\n|\r|\n                                 {if(last && check){printf("SEMICOLON\n");} 
                                             if(last){ last = 0; 
                                                 if(check2) {update_position(yyleng, 3); 
                                                     return SEMICOLON;
