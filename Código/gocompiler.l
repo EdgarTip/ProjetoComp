@@ -16,6 +16,9 @@
     int last_num_column = 0;
     int last_num_line = 0;
     
+    
+    extern tree_list start_node;
+    extern int error;
 
     char *ptr = NULL;
 
@@ -248,6 +251,7 @@ int main(int argc, char* argv[])
                     check = 1;
                     break;
                 case 't':
+
                     check2 = 1;
                     break;
 
@@ -258,7 +262,16 @@ int main(int argc, char* argv[])
     }
     if (check2) {
         yyparse();
-       
+
+        if(!error){
+            printTree(start_node,0);    
+        }
+        
+        tab root_table = createAllTables(start_node);
+        
+        printTables(root_table);
+        freeTree(start_node);
+
     } else if (check) {
          yylex();
     }

@@ -6,7 +6,7 @@ tab root_table = NULL;
 
 //Creates a token
 id_token create_token(char *value, int line, int col) {
-  id_token tok = malloc(sizeof(id_token));
+  id_token tok = (id_token)malloc(sizeof(id_token));
   tok->symbol = value;
   tok->line = line;
   tok->column = col;
@@ -16,7 +16,7 @@ id_token create_token(char *value, int line, int col) {
 //Creates a new node
 tree_list create_node(enum class_name class, char *symbol, int line, int column, id_token tok){
 
-    tree_list list = malloc(sizeof(tree_list));
+    tree_list list = (struct node_list *)malloc(sizeof(struct node_list));
 
      if (list == NULL && sizeof(list) > 0){
             printf("MALLOC ERROR LIST\n");
@@ -24,7 +24,7 @@ tree_list create_node(enum class_name class, char *symbol, int line, int column,
             exit(0);
         } 
 
-    list->node = malloc(sizeof(tree_node));
+    list->node = (struct node *)malloc(sizeof(struct node));
 
     //If malloc fails
         if (list->node == NULL && sizeof(list->node) > 0){
@@ -34,10 +34,10 @@ tree_list create_node(enum class_name class, char *symbol, int line, int column,
         } 
 
     if(tok == NULL){
-        list->node->token = malloc(sizeof(struct token));
+        list->node->token = (struct token*)malloc(sizeof(struct token));
         
         //If malloc fails
-        if (list->node->token == NULL && sizeof(struct token) > 0){
+        if (list->node->token == NULL && sizeof(id_token) > 0){
             printf("MALLOC ERROR TOKEN\n");
             //freeTree();
             exit(0);
@@ -221,88 +221,86 @@ void printTree(tree_list list, int depth){
 
 
 //--Semantic Tables--
+int checkExists(tab table, char* name){
+    elem_table aux = table->first_elem;
 
-//Returns the root table
-void createAllTables(tree_list root, tab current_table){
-    if(root = NULL){
-        return;
+    while(aux != NULL){
+        if(strcmp(aux->value, name) == 0){
+            return 1;
+        }
+        aux = aux->next;
     }
-    switch(root->node->class){
-        case PROGRAM:
-            current_table = createTable(NULL, 1);
-            createAllTables(root->node->children, current_table);
-            break;
-
-        case FUNCDECL:
-            tree_list func_id = root->node->children->node->children;
-            tree_list func_type = func_id->next;
-
-            //Params
-            char *params;
-            tree_list func_param = func_type->next;
-
-            if(func_param->node->children != NULL){
-                int first = 1;
-                while(func_param != NULL){
-                    tree_list param_type = func_param->node->children;
-                    tree_list param_id = param_type->next;
-
-                    if(first){
-                        params = strcat(params, "(");
-                        params = strcat(params, param_type->node->token->symbol);
-                    }
-                    else{
-                        params = strcat(params, ",");
-                        params = strcat(params, param_type->node->token->symbol);
-                        
-                    }
-                    first = 0;
-                }
-                params = strcat(params, ")");
-            }
-            else{
-                params = "none";
-            }
-            //Insert new value into current table
-            if(!checkExists(current_table, func_id->node->token->symbol)){ 
-
-                instertElementTable(root_table, createElem(func_id->node->token->symbol, func_id->node->token->symbol, params));
-            }
-            else{
-                printf("Line %d, column %d: Symbol %s already defined\n", func_id->node->token->line, func_id->node->token->column, func_id->node->token->symbol);
-            }
-            break;
-
-        case VARDEC:
-            //Insert a new value to the table. Get the value of the brother of the child, type of the child and parameters are none
-            //VARDEC
-            tree_node dad_node = root->node;
-            //TYPE
-            tree_list child1 = dad_node->children;
-            //ID
-            tree_list child2 = child1->next;
-        
-            //Insert new value into current table
-            if(!checkExists(current_table, child2->node->token->symbol)){ 
-
-                instertElementTable(current_table, createElem(child2->node->token->symbol, child1->node->token->symbol, ""));
-            }
-
-            else{
-                printf("Line %d, column %d: Symbol %s already defined\n", child2->node->token->line, child2->node->token->column, child2->node->token->symbol);
-            }
-            createTable(root->next, current_table);
-            break;
-
-    }
-
-
-
+    
+    return 0;
 }
 
 
+void printElems(elem_table element){
+
+    elem_table aux1 = element; 
+    while(aux1 != NULL){
+        printf("Name %s, type %s, params(", aux1->value, aux1->type);
+
+        param aux2 = aux1->first_param;
+        while( aux2 != NULL){
+            printf("%s ", aux2->params);
+            aux2 = aux2->next;
+        }
+        printf("), is_param %d\n", aux1->is_param);
+
+        aux1 = aux1->next;
+    }
+
+}
+
+void printTables(tab root){
+    if(root == NULL) return;
+
+    if(root->name == NULL){
+        printf("====== GLOBAL =====\n");
+    }
+    else{
+        printf("====== %s ======\n", root->name);
+    }
+
+    if(root->first_elem !=NULL){
+        printElems(root->first_elem);
+    } 
+
+    printTables(root->next);
+
+}
+
+param addParameter( param root,param new_param){
+
+    if(root == NULL){
+        return new_param;
+        
+    }
+
+    param aux = root;
+    while(aux->next != NULL){
+        aux = aux->next;
+    }
+    aux->next = new_param;
+    return root;
+}
+
+
+param createParam(char *value){
+    param parameter = (struct parameter *) malloc(sizeof(struct parameter));
+
+    parameter->params = value;
+    parameter->next = NULL;
+
+    return parameter; 
+}
+
+
+
 //Insert a new element to a table
-void instertElementTable(tab table, elem_table element){
+void insertElementTable(tab table, elem_table element){
+
     if(table->first_elem == NULL){
         table->first_elem = element;
         return;
@@ -318,21 +316,41 @@ void instertElementTable(tab table, elem_table element){
     
 }
 
+//Create a new element
+elem_table createElem(char *value,  char *type, param parameter, int is_param){
+    elem_table elem = (struct element_table*)malloc(sizeof(struct element_table));
+
+    elem->value = value;
+    elem->type = type;
+    elem->first_param = parameter;
+    elem->is_param = is_param;
+    elem->next = NULL;
+  
+    return elem;
+}
+
 //Create a new table. If it is the global one starts global table variable
 tab createTable(elem_table table_element, int is_global){
 
-    tab new_table = malloc(sizeof(tab));
+    tab new_table = (struct table*)malloc(sizeof(struct table));
     if(!is_global){
-        new_table->first_elem= createElem("return", "", table_element->type);
+        new_table->first_elem= createElem("return", table_element->type, NULL, 0);
 
-        char *str = strcat(table_element->value, table_element->parameters);
-        new_table->name = str;
+
+        new_table->first_param = table_element->first_param;
+        new_table->name = table_element->value;
     }
 
+    //If there is still no root table
     if(root_table == NULL){
+        new_table->name = NULL;
+        new_table->first_elem = NULL;
+        new_table->first_param = NULL;
+        new_table->next = NULL; 
         root_table = new_table;
-        return;
+        return root_table;
     }
+    //If there is a root table then we add to the next *next avaiable
     else{
         tab aux = root_table;
         while(aux->next != NULL){
@@ -340,30 +358,198 @@ tab createTable(elem_table table_element, int is_global){
         }
         aux->next = new_table;
     }
-}
 
-//Create a new element
-elem_table createElem(char *value,  char *type, char *parameter){
-    elem_table elem = malloc(sizeof(elem_table));
-
-    elem->value = value;
-    elem->type = type;
-    elem->parameters = parameter;
-    elem->next = NULL;
-
-    return elem;
+    return new_table;
 }
 
 
-int checkExists(tab table, char* name){
-    elem_table aux = table->first_elem;
+//Checks for variables in function body
+void funcBodyTable(tree_list root, tab table){
 
-    while(aux != NULL){
-        if(strcmp(aux->value, name) == 0){
-            return 1;
+    if(root == NULL) return;
+
+    switch(root->node->class){
+        case VARDEC:
+        {
+            tree_list var_type = root->node->children;
+            tree_list var_id = var_type->next;
+            //Insert new value into current table
+            if(!checkExists(table, var_id->node->token->symbol)){ 
+                insertElementTable(table, createElem(var_id->node->token->symbol, var_type->node->token->symbol, NULL, 0));
+            }
+
+            
+            else{
+                printf("Line %d, column %d: Symbol %s already defined\n", var_id->node->token->line, var_id->node->token->column, var_id->node->token->symbol);
+            }
+            printf("HERE%s\n", var_id->node->token->symbol);
+            if(root->next != NULL){
+                funcBodyTable(root->node->children, table);
+            }
+            
         }
-        aux = aux->next;
+        default:
+        {   
+            if(root->node->children != NULL){
+                funcBodyTable(root->node->children, table); 
+            }
+
+            if(root->next != NULL){
+                funcBodyTable(root->node->children, table);
+            }
+            
+        }
     }
+
+    return;
+
     
-    return 0;
 }
+    
+
+//Creates all tables and anotaded tree (in function body)
+tab createAllTables(tree_list root){
+
+    tab current_table = NULL;
+    
+    if(root == NULL){
+        return root_table;
+    }
+    switch(root->node->class){
+        case PROGRAM:
+        {
+            current_table = createTable(NULL, 1);
+            createAllTables(root->node->children);
+            return root_table;
+            break;
+        }
+        case FUNCDECL:
+        {
+            tree_list func_header = root->node->children;
+            tree_list func_id = func_header->node->children;
+            
+            tree_list func_type;
+            tree_list func_param;
+
+            
+            if(func_id->next->node->class != PARAMETERS){
+                 func_type = func_id->next;
+                 func_param = func_type->next;
+            }
+            //In case a node type does not exist
+            else{
+                func_type = NULL;
+                func_param = func_id->next;
+            }
+            //Params
+            param param_root = NULL;
+             
+            tree_list func_param_dec = func_param->node->children;
+            
+            //Sees if function has parameters
+            if(func_param_dec != NULL){
+                int first = 1;
+                //Add all parameters
+                
+                while(func_param_dec != NULL){
+                    tree_list param_type = func_param_dec->node->children;
+                    tree_list param_id = param_type->next;
+
+                    param aux = createParam(param_type->node->token->symbol);
+                    param_root = addParameter(param_root, aux);
+
+                    func_param_dec = func_param_dec->next;
+                }
+
+            }
+            
+            else{
+                
+                param_root = NULL;
+            }
+
+            //Insert new value into root table and create a new table
+            if(!checkExists(root_table, func_id->node->token->symbol)){ 
+                
+                char *type;
+
+                if(func_type != NULL){
+                    type =  func_type->node->token->symbol;
+                }
+                else{
+                    type = "none";
+                }
+
+                elem_table func_elem = createElem(func_id->node->token->symbol, type, param_root, 0);
+
+                insertElementTable(root_table, func_elem);
+                current_table = createTable(func_elem, 0);
+
+                //add all parameters as elements in new table  
+                func_param_dec =  func_param->node->children;
+
+                if(func_param_dec != NULL){
+
+                    //Add all parameters
+                    while(func_param_dec != NULL){
+                        //Param Type
+                        tree_list param_type = func_param_dec->node->children;
+                        //Param Id
+                        tree_list param_id = param_type->next;
+                        if(!checkExists(current_table, param_id->node->token->symbol)){
+                            insertElementTable(current_table, createElem(param_id->node->token->symbol, param_type->node->token->symbol, NULL, 1));
+                       
+                        }
+                        else{
+                            printf("Line %d, column %d: Symbol %s already defined\n", param_id->node->token->line, param_id->node->token->column, param_id->node->token->symbol);
+                        }
+                        
+                        func_param_dec = func_param_dec->next;
+                    }
+                }   
+                
+                funcBodyTable(func_header->next, current_table);
+
+            }
+            else{
+                printf("Line %d, column %d: Symbol %s already defined\n", func_id->node->token->line, func_id->node->token->column, func_id->node->token->symbol);
+            }
+
+            
+            break;
+        }
+        case VARDEC:
+        {
+            //Insert a new value to the root table. Get the value of the brother of the child, type of the child and parameters are none
+            //VARDEC
+            tree_node dad_node = root->node;
+            //TYPE
+            tree_list child1 = dad_node->children;
+            //ID
+            tree_list child2 = child1->next;
+        
+            //Insert new value into current table
+            if(!checkExists(root_table, child2->node->token->symbol)){ 
+                insertElementTable(root_table, createElem(child2->node->token->symbol, child1->node->token->symbol, NULL, 0));
+            }
+
+            else{
+                printf("Line %d, column %d: Symbol %s already defined\n", child2->node->token->line, child2->node->token->column, child2->node->token->symbol);
+            }
+            
+            break;
+        }
+
+        default:
+        {
+            break;
+        }
+
+    }
+
+    createAllTables(root->next);
+    return root_table;
+
+
+}
+

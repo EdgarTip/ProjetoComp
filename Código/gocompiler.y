@@ -7,6 +7,7 @@
     char error = 0;
     extern int check2;
 
+    tree_list start_node;
     extern int num_line;
     extern int num_column;
 
@@ -66,7 +67,7 @@ struct token *id_token;
 %%
 
 
-Program: PACKAGE ID SEMICOLON Declarations END    {$$= create_node(PROGRAM, "Program", num_line, num_column, NULL); addChild($$,$4); if (!error) printTree($$,0); freeTree($$);}
+Program: PACKAGE ID SEMICOLON Declarations END    {start_node= create_node(PROGRAM, "Program", num_line, num_column, NULL); addChild(start_node,$4);}
 ;
 
 
