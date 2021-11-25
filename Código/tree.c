@@ -200,14 +200,17 @@ void printTree(tree_list list, int depth, int semantic){
             else printf("RealLit(%s) - %s\n", list->node->token->symbol, list->node->type);
             break;
         case STRLITE:
-            printf("StrLit(\"%s\")\n", list->node->token->symbol);
+             if(!semantic || list->node->type == NULL)printf("StrLit(\"%s\")\n", list->node->token->symbol);
+             else printf("StrLit(\"%s\") - %s\n", list->node->token->symbol, list->node->type);
             break;
         case INTLITE:
             if(!semantic || list->node->type == NULL) printf("IntLit(%s)\n", list->node->token->symbol);
             else printf("IntLit(%s) - %s\n", list->node->token->symbol, list->node->type);
             break;
+        
         default:
-            printf("%s\n", list->node->token->symbol);
+            if(!semantic || list->node->type == NULL)printf("%s\n", list->node->token->symbol);
+            else printf("%s - %s\n", list->node->token->symbol, list->node->type);
             break;
     }
 
@@ -609,7 +612,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
     switch(root->node->class){
         case INTLITE:
         {
-            root->node->type = "Int";
+            root->node->type = "int";
             break;
         }
         case IDE:
@@ -631,6 +634,29 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         case REALLITE:
         {
             root->node->type = "float32";
+            break;
+        }
+        case STRLITE:
+        {
+            root->node->type = "string";
+            break;
+        }
+        //In this case we need to reset the type of the ID to null because we do not want declarated variables to show their type on the final tree
+        case VARDEC:
+        {
+            root->node->children->next->node->type = NULL;
+            break;
+        }
+        //We have to check if second child is type INTLIT and parse args gets type of first child
+        case PARSEARGS:
+        {
+            if(root->node->children->next->node->class != INTLITE){
+                printf("ERRRROOOOOO\n");
+                root->node->type = "undef";
+            }
+            else{
+                root->node->type = root->node->children->node->type;
+            }
             break;
         }
         case OPERATOR:
