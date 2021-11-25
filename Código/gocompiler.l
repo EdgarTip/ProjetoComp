@@ -162,7 +162,7 @@ newLine                         ["\r\n""\n""\r"]
 ")"                                         {if(check) printf("RPAR\n"); update_position(yyleng, 0); last = 1; if(check2)return RPAR;}
 "]"                                         {if(check) printf("RSQ\n"); update_position(yyleng, 0); last = 1; if(check2)return RSQ;}
 
-[a-zA-Z_]{id_characters}*                    {if(check) printf("ID(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return ID;}
+[a-zA-Z_]{id_characters}*                    {if(check) printf("ID(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return ID;}
 
 " "                                         {update_position(yyleng, 0);}
 \t                                          {update_position(yyleng, 0);}
@@ -264,12 +264,16 @@ int main(int argc, char* argv[])
         yyparse();
 
         if(!error){
-            printTree(start_node,0);    
+            printTree(start_node,0, 0);    
         }
         
         tab root_table = createAllTables(start_node);
         
         printTables(root_table);
+        
+        createAstAnotated(start_node, root_table);
+        
+        printTree(start_node,0, 1);
         freeTree(start_node);
 
     } else if (check) {

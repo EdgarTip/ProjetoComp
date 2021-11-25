@@ -186,22 +186,25 @@ output:
 ....4
 ..3
 */
-void printTree(tree_list list, int depth){
+void printTree(tree_list list, int depth, int semantic){
     for(int i = 0; i < depth; i++){
         printf("..");
     }
     switch(list->node->class){
         case IDE:
-            printf("Id(%s)\n", list->node->token->symbol);
+            if(!semantic || list->node->type == NULL)printf("Id(%s)\n", list->node->token->symbol);
+            else printf("ID(%s) - %s\n", list->node->token->symbol, list->node->type);
             break;
         case REALLITE:
-            printf("RealLit(%s)\n", list->node->token->symbol);
+            if(!semantic || list->node->type == NULL) printf("RealLit(%s)\n", list->node->token->symbol);
+            else printf("RealLit(%s) - %s\n", list->node->token->symbol, list->node->type);
             break;
         case STRLITE:
             printf("StrLit(\"%s\")\n", list->node->token->symbol);
             break;
         case INTLITE:
-            printf("IntLit(%s)\n", list->node->token->symbol);
+            if(!semantic || list->node->type == NULL) printf("IntLit(%s)\n", list->node->token->symbol);
+            else printf("IntLit(%s) - %s\n", list->node->token->symbol, list->node->type);
             break;
         default:
             printf("%s\n", list->node->token->symbol);
@@ -210,11 +213,11 @@ void printTree(tree_list list, int depth){
 
     //Sees if it has childs
     if(list->node->children != NULL){
-        printTree(list->node->children, depth +1);
+        printTree(list->node->children, depth +1, semantic);
     }
 
     if(list->next != NULL){
-        printTree(list->next, depth);
+        printTree(list->next, depth, semantic);
     }
 
 }
@@ -334,8 +337,7 @@ tab findTable(tab root, char *name){
 
     tab aux = root;
 
-    while(aux == NULL){
-
+    while(aux != NULL){
         if(strcmp(aux->name, name) == 0){
             return aux;
         }
@@ -359,7 +361,7 @@ tab createTable(elem_table table_element, int is_global){
 
     //If there is still no root table
     if(root_table == NULL){
-        new_table->name = NULL;
+        new_table->name = "global";
         new_table->first_elem = NULL;
         new_table->first_param = NULL;
         new_table->next = NULL; 
@@ -391,16 +393,18 @@ void funcBodyTable(tree_list root, tab table){
             tree_list var_id = var_type->next;
             //Insert new value into current table
             if(!checkExists(table, var_id->node->token->symbol)){ 
+                
                 insertElementTable(table, createElem(var_id->node->token->symbol, var_type->node->token->symbol, NULL, 0));
             }
-
-            
             else{
+
+
                 printf("Line %d, column %d: Symbol %s already defined\n", var_id->node->token->line, var_id->node->token->column, var_id->node->token->symbol);
             }
             if(root->next != NULL){
-                funcBodyTable(root->node->children, table);
+                funcBodyTable(root->next, table);
             }
+            break;
             
         }
         default:
@@ -410,9 +414,9 @@ void funcBodyTable(tree_list root, tab table){
             }
 
             if(root->next != NULL){
-                funcBodyTable(root->node->children, table);
+                funcBodyTable(root->next, table);
             }
-            
+            break;
         }
     }
 
@@ -527,6 +531,7 @@ tab createAllTables(tree_list root){
 
             }
             else{
+                
                 printf("Line %d, column %d: Symbol %s already defined\n", func_id->node->token->line, func_id->node->token->column, func_id->node->token->symbol);
             }
 
@@ -568,24 +573,117 @@ tab createAllTables(tree_list root){
 
 }
 
+//Checks if there is a element either in the current function table or the global table. Returns type
+//TODO: VER SE TEM 2 REPETIDOS
+char* findElement(tab table, char *value){
+    elem_table aux = root_table->first_elem;
+    elem_table aux2 = table->first_elem;
+    while(aux != NULL || aux2 != NULL){
+        if(strcmp(aux->value, value) == 0){
+            return aux->type;
+        }
 
-void create_ast_anotated( tree_list root, tab table){
+        if(strcmp(aux2->value,value) == 0){
+            return aux2->type;
+        }
+
+        if(aux != NULL) aux = aux->next;
+        if(aux2 != NULL) aux2 = aux2->next;
+    }
+    return NULL;
+}
+
+
+//Logic for the semantic tree inside a function
+void createAstAnotatedInsideFunc(tree_list root, tab table){
 
     if(root == NULL) return;
+    if(root->next != NULL){
+        createAstAnotatedInsideFunc(root->next, table);
+    }
 
+    if(root->node->children != NULL){
+        createAstAnotatedInsideFunc(root->node->children, table);
+    }
+
+    switch(root->node->class){
+        case INTLITE:
+        {
+            root->node->type = "Int";
+            break;
+        }
+        case IDE:
+        {   
+            //Sees if element exists and if it does then gets the type as a return parameter. If it receives no value it means it does not exist
+            char *type = findElement(table, root->node->token->symbol);
+            
+            if(type == NULL){
+                printf("Line %d, column %d: Cannot find symbol %s", root->node->token->line, root->node->token->column, root->node->token->symbol);
+                root->node->type = "undef";
+            }
+            else{
+                root->node->type = type;
+            }
+            
+            
+            break;
+        }
+        case REALLITE:
+        {
+            root->node->type = "float32";
+            break;
+        }
+        case OPERATOR:
+        {
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
+    
+
+
+
+}
+
+
+void createAstAnotated( tree_list root, tab table){
+    if(root == NULL) return;
+          
     switch(root->node->class){
         case FUNCDECL:
         {
-            
-        }
-        default:
-        {   
-            if(root->node->children != NULL){
-                create_ast_anotated(root->node->children, table); 
+            tree_list func_head = root->node->children;
+            tree_list func_id  = func_head->node->children;
+
+            tab current_table = findTable(root_table, func_id->node->token->symbol);
+
+            if(current_table != NULL){
+                createAstAnotatedInsideFunc(func_head->next, current_table);
+
+                
+            }
+            else{
+                printf("Line %d, column %d: Cannot find symbol %s\n", func_id->node->token->line, func_id->node->token->column, func_id->node->token->symbol);
             }
 
             if(root->next != NULL){
-                create_ast_anotated(root->node->children, table);
+                    createAstAnotated(root->next, root_table);
+            } 
+        }
+        default:
+        {   
+            
+            if(root->node->children != NULL){
+                createAstAnotated(root->node->children, root_table); 
+                
+            }
+
+            if(root->next != NULL){
+                createAstAnotated(root->next, root_table);
             }
             
         }

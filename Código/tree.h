@@ -59,10 +59,11 @@ tree_list create_node(enum class_name class, char *symbol, int line, int column,
 id_token create_token(char *value, int  line, int column);
 void addChild(tree_list root, tree_list new_child);
 void freeTree(tree_list root);
-void printTree(tree_list node, int depth);
+void printTree(tree_list node, int depth, int semantic);
 void add_next(tree_list new_node, tree_list next_node);
 void add_max_next(tree_list new_node, tree_list next_node);
 int number_of_children(tree_list node);
 void add_child_to_all(tree_list root, tree_list child);
 tab createAllTables(tree_list root);
 void printTables(tab root);
+void createAstAnotated( tree_list root, tab table);
