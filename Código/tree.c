@@ -277,17 +277,49 @@ void printParams(param params){
     return;
 }
 
+//Finds a table by its name. Returns NULL if table is not found
+tab findTable(tab root, char *name){
+
+    tab aux = root;
+
+    while(aux != NULL){
+        if(strcmp(aux->name, name) == 0){
+            return aux;
+        }
+
+        aux = aux->next;
+    }
+    return NULL;
+}
+
 void printElems(elem_table element){
 
     elem_table aux1 = element; 
     while(aux1 != NULL){
-        printf("Name %s, type %s, params(", aux1->value, aux1->type);
+        printf("%s\t", aux1->value);
 
-        printParams(aux1->first_param);
+        tab is_table= findTable(root_table, aux1->value);
 
-        printf(") , isparam %d\n", aux1->is_param);
+        //If table doesn't exist then we pass the table element
+        if(is_table==NULL){
+            printf("\t");
+        }
+        else{
+            printf("(");
+            printParams(aux1->first_param); 
+            printf(")");
+        }
+        
+        printf("\t%s", aux1->type);
+        if(aux1->is_param){
+            printf("\tparam\n");
+        }
+        else{
+            printf("\n");
+        }
         aux1 = aux1->next;
-    }
+    }    
+    printf("\n");
 
 }
 
@@ -373,20 +405,7 @@ elem_table createElem(char *value,  char *type, param parameter, int is_param){
     return elem;
 }
 
-//Finds a table by its name. Returns NULL if table is not found
-tab findTable(tab root, char *name){
 
-    tab aux = root;
-
-    while(aux != NULL){
-        if(strcmp(aux->name, name) == 0){
-            return aux;
-        }
-
-        aux = aux->next;
-    }
-    return NULL;
-}
 
 //Create a new table. If it is the global one starts global table variable
 tab createTable(elem_table table_element, int is_global){
