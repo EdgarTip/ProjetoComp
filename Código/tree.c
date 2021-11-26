@@ -1,12 +1,13 @@
 #include "tree.h"
-
+#include <string.h>
+#include <ctype.h>
 
 tab root_table = NULL;
 //--Tree--
 
 //Creates a token
 id_token create_token(char *value, int line, int col) {
-  id_token tok = (id_token)malloc(sizeof(id_token));
+  id_token tok = (struct token *)malloc(sizeof(struct token));
   tok->symbol = value;
   tok->line = line;
   tok->column = col;
@@ -254,33 +255,88 @@ int checkExists(tab table, char* name){
     return 0;
 }
 
+void printParams(param params){
+    param aux2 = params;
+
+    while( aux2 != NULL){
+
+        char *lower = calloc(strlen(aux2->params)+1, sizeof(char));
+
+        int i = 0;
+        for(; i<strlen(aux2->params); i++){
+            lower[i] = tolower((unsigned char)aux2->params[i]);
+        }
+
+        lower[i++] = '\0';
+        if(aux2->next != NULL)printf("%s, ", lower);
+        else printf("%s", lower);
+        
+        free(lower);
+        aux2 = aux2->next;
+    }
+    return;
+}
+
+//Finds a table by its name. Returns NULL if table is not found
+tab findTable(tab root, char *name){
+
+    tab aux = root;
+
+    while(aux != NULL){
+        if(strcmp(aux->name, name) == 0){
+            return aux;
+        }
+
+        aux = aux->next;
+    }
+    return NULL;
+}
 
 void printElems(elem_table element){
 
     elem_table aux1 = element; 
     while(aux1 != NULL){
-        printf("Name %s, type %s, params(", aux1->value, aux1->type);
+        printf("%s\t", aux1->value);
 
-        param aux2 = aux1->first_param;
-        while( aux2 != NULL){
-            printf("%s ", aux2->params);
-            aux2 = aux2->next;
+        tab is_table= findTable(root_table, aux1->value);
+
+        //If table doesn't exist then we pass the table element
+        if(is_table==NULL){
+            printf("\t");
         }
-        printf("), is_param %d\n", aux1->is_param);
-
+        else{
+            printf("(");
+            printParams(aux1->first_param); 
+            printf(")");
+        }
+        
+        printf("\t%s", aux1->type);
+        if(aux1->is_param){
+            printf("\tparam\n");
+        }
+        else{
+            printf("\n");
+        }
         aux1 = aux1->next;
-    }
+    }    
+    printf("\n");
 
 }
+
+
+
 
 void printTables(tab root){
     if(root == NULL) return;
 
-    if(root->name == NULL){
-        printf("====== GLOBAL =====\n");
+    if(strcmp(root->name, "global") == 0){
+        printf("===== Global Symbol Table =====\n");
     }
     else{
-        printf("====== %s ======\n", root->name);
+        printf("===== Function %s(", root->name);
+        printParams(root->first_param);
+        printf(") Symbol Table =====\n");
+
     }
 
     if(root->first_elem !=NULL){
@@ -349,20 +405,7 @@ elem_table createElem(char *value,  char *type, param parameter, int is_param){
     return elem;
 }
 
-//Finds a table by its name. Returns NULL if table is not found
-tab findTable(tab root, char *name){
 
-    tab aux = root;
-
-    while(aux != NULL){
-        if(strcmp(aux->name, name) == 0){
-            return aux;
-        }
-
-        aux = aux->next;
-    }
-    return NULL;
-}
 
 //Create a new table. If it is the global one starts global table variable
 tab createTable(elem_table table_element, int is_global){
@@ -445,12 +488,13 @@ void funcBodyTable(tree_list root, tab table){
 
 //Creates all tables and anotaded tree (in function body)
 tab createAllTables(tree_list root){
-
+    
     tab current_table = NULL;
     
     if(root == NULL){
         return root_table;
     }
+
     switch(root->node->class){
         case PROGRAM:
         {
@@ -593,19 +637,25 @@ tab createAllTables(tree_list root){
 //Checks if there is a element either in the current function table or the global table. Returns type
 //TODO: VER SE TEM 2 REPETIDOS
 elem_table findElement(tab table, char *value){
-    elem_table aux = root_table->first_elem;
-    elem_table aux2 = table->first_elem;
-    while(aux != NULL || aux2 != NULL){
-        if(strcmp(aux->value, value) == 0){
-            return aux;
+    
+    //See if variable is in local table
+    elem_table aux1 = table->first_elem;
+    while(aux1 != NULL){
+        if(strcmp(aux1->value, value) == 0){
+            return aux1;
         }
 
-        if(strcmp(aux2->value,value) == 0){
+        aux1 = aux1->next;
+    }
+
+    //See if variable is in global table
+    elem_table aux2 = root_table->first_elem;
+    while(aux2 != NULL){
+        if(strcmp(aux2->value, value) == 0){
             return aux2;
         }
 
-        if(aux != NULL) aux = aux->next;
-        if(aux2 != NULL) aux2 = aux2->next;
+        aux2 = aux2->next;
     }
     return NULL;
 }
@@ -615,14 +665,14 @@ elem_table findElement(tab table, char *value){
 void createAstAnotatedInsideFunc(tree_list root, tab table){
 
     if(root == NULL) return;
+    
     if(root->next != NULL){
         createAstAnotatedInsideFunc(root->next, table);
     }
 
     if(root->node->children != NULL){
         createAstAnotatedInsideFunc(root->node->children, table);
-    }
-
+    } 
     switch(root->node->class){
         case INTLITE:
         {
@@ -634,9 +684,8 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             
             //Sees if element exists and if it does then gets the type as a return parameter. If it receives no value it means it does not exist
             elem_table elem = findElement(table, root->node->token->symbol);
-            
             if(elem == NULL){
-                printf("Line %d, column %d: Cannot find symbol %s", root->node->token->line, root->node->token->column, root->node->token->symbol);
+                printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
                 root->node->type = "undef";
             }
             else{
@@ -688,7 +737,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             tree_list parameter = function->next; 
 
             //See if parameters piut in the function are correct and in the correct order
-
+            
             tab table = findTable(root_table, function->node->token->symbol);
 
             if(table == NULL){
@@ -717,29 +766,46 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                 return;
             }
 
+            //Creates the string in format "(value)"
+            char *string = malloc(strlen(root->node->children->node->type) +3 );
+            strcpy(string, "(");
+            strcat(string, root->node->children->node->type);
+            strcat(string, ")");
+
+
+
             root->node->type = table->first_elem->type;
+            root->node->children->node->type = string;
             break;
         }
         case OPERATOR:
         {
-            printf("Hello\n");
+
             tree_list child1 = root->node->children;
-            if(child1 == NULL || child1->node->type == NULL){
-                printf("Child1 is null\n");
-                return;
-            }
+
             tree_list child2 = child1->next;
-            if(child2 == NULL ||  child2->node->type == NULL){
-                printf("NODE %s\n", root->node->token->symbol);
-                printf("Child2 is null");
-                return;
-            }
+
             if(strcmp(child1->node->type, child2->node->type) == 0){
                 root->node->type = child2->node->type;
             }
             else{
                 printf("ERRO DE TIPOS DIFERENTES EM OPERADORES\n");
             }
+            break;
+        }
+        case CONDITIONOPERATOR:
+        {
+            tree_list child1 = root->node->children;
+
+            tree_list child2 = child1->next;
+
+            if(strcmp(child1->node->type, child2->node->type) == 0){
+                root->node->type = "bool";
+            }
+            else{
+                printf("ERRO DE TIPOS DIFERENTES EM OPERADORES\n");
+            }
+        
             break;
         }
         default:
@@ -757,7 +823,6 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
 
 void createAstAnotated( tree_list root, tab table){
     if(root == NULL) return;
-          
     switch(root->node->class){
         case FUNCDECL:
         {
