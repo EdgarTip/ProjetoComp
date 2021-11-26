@@ -97,7 +97,7 @@ CommaId: COMMA ID CommaId                                           {$$= create_
     |                                                               {$$ = NULL;}
     ;
     
-Type: INT                                                           {$$= create_node(INTE, "Int", num_line, num_column, NULL);}
+Type: INT                                                           {$$= create_node(INTE, "int", num_line, num_column, NULL);}
     |   FLOAT32                                                     {$$= create_node(FLOAT32E, "Float32", num_line, num_column, NULL);}
     |   BOOL                                                        {$$= create_node(BOOL, "Bool", num_line, num_column, NULL);}
     |   STRING                                                      {$$= create_node(STRINGE, "String", num_line, num_column, NULL);}
@@ -243,8 +243,8 @@ Expr: Expr OR Expr                                             {$$= create_node(
     |   Expr STAR Expr                                         {$$= create_node(OPERATOR, "Mul", num_line, num_column, NULL); addChild($$,$1); addChild($$,$3);}
     |   Expr DIV Expr                                          {$$= create_node(OPERATOR, "Div", num_line, num_column, NULL); addChild($$,$1); addChild($$,$3); }
     |   Expr MOD Expr                                          {$$= create_node(OPERATOR, "Mod", num_line, num_column, NULL); addChild($$,$1); addChild($$,$3); }
-    |   MINUS Expr  %prec UNARY                                {$$= create_node(OPERATOR, "Minus", num_line, num_column, NULL); addChild($$,$2);}
-    |   PLUS  Expr  %prec UNARY                                {$$= create_node(OPERATOR, "Plus", num_line, num_column, NULL); addChild($$,$2); }
+    |   MINUS Expr  %prec UNARY                                {$$= create_node(UNARYE, "Minus", num_line, num_column, NULL); addChild($$,$2);}
+    |   PLUS  Expr  %prec UNARY                                {$$= create_node(UNARYE, "Plus", num_line, num_column, NULL); addChild($$,$2); }
     |   NOT  Expr                                              {$$= create_node(OPERATOR, "Not", num_line, num_column, NULL); addChild($$,$2); }
     |   INTLIT                                                 {$$ = create_node(INTLITE, 0, 0, 0, $1);}
     |   REALLIT                                                {$$ = create_node(REALLITE, 0, 0, 0, $1);}

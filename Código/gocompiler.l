@@ -264,16 +264,18 @@ int main(int argc, char* argv[])
         yyparse();
 
         if(!error){
-            printTree(start_node,0, 0);    
+            //printTree(start_node,0, 0);  
+
+            tab root_table = createAllTables(start_node);
+        
+            printTables(root_table);
+        
+            createAstAnotated(start_node, root_table);
+        
+            printTree(start_node,0, 1);  
         }
         
-        tab root_table = createAllTables(start_node);
         
-        printTables(root_table);
-        
-        createAstAnotated(start_node, root_table);
-        
-        printTree(start_node,0, 1);
         freeTree(start_node);
 
     } else if (check) {

@@ -192,26 +192,40 @@ void printTree(tree_list list, int depth, int semantic){
     }
     switch(list->node->class){
         case IDE:
+        {
             if(!semantic || list->node->type == NULL)printf("Id(%s)\n", list->node->token->symbol);
-            else printf("ID(%s) - %s\n", list->node->token->symbol, list->node->type);
+            else printf("Id(%s) - %s\n", list->node->token->symbol, list->node->type);
             break;
+        }
         case REALLITE:
+        {
             if(!semantic || list->node->type == NULL) printf("RealLit(%s)\n", list->node->token->symbol);
             else printf("RealLit(%s) - %s\n", list->node->token->symbol, list->node->type);
             break;
+        }
         case STRLITE:
+        {
              if(!semantic || list->node->type == NULL)printf("StrLit(\"%s\")\n", list->node->token->symbol);
              else printf("StrLit(\"%s\") - %s\n", list->node->token->symbol, list->node->type);
             break;
+        }
         case INTLITE:
+        {
             if(!semantic || list->node->type == NULL) printf("IntLit(%s)\n", list->node->token->symbol);
             else printf("IntLit(%s) - %s\n", list->node->token->symbol, list->node->type);
             break;
-        
+        }
+        case INTE:
+        {
+            printf("Int\n");
+            break;
+        }
         default:
+        {
             if(!semantic || list->node->type == NULL)printf("%s\n", list->node->token->symbol);
             else printf("%s - %s\n", list->node->token->symbol, list->node->type);
             break;
+        }
     }
 
     //Sees if it has childs
@@ -578,16 +592,16 @@ tab createAllTables(tree_list root){
 
 //Checks if there is a element either in the current function table or the global table. Returns type
 //TODO: VER SE TEM 2 REPETIDOS
-char* findElement(tab table, char *value){
+elem_table findElement(tab table, char *value){
     elem_table aux = root_table->first_elem;
     elem_table aux2 = table->first_elem;
     while(aux != NULL || aux2 != NULL){
         if(strcmp(aux->value, value) == 0){
-            return aux->type;
+            return aux;
         }
 
         if(strcmp(aux2->value,value) == 0){
-            return aux2->type;
+            return aux2;
         }
 
         if(aux != NULL) aux = aux->next;
@@ -617,15 +631,16 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         }
         case IDE:
         {   
-            //Sees if element exists and if it does then gets the type as a return parameter. If it receives no value it means it does not exist
-            char *type = findElement(table, root->node->token->symbol);
             
-            if(type == NULL){
+            //Sees if element exists and if it does then gets the type as a return parameter. If it receives no value it means it does not exist
+            elem_table elem = findElement(table, root->node->token->symbol);
+            
+            if(elem == NULL){
                 printf("Line %d, column %d: Cannot find symbol %s", root->node->token->line, root->node->token->column, root->node->token->symbol);
                 root->node->type = "undef";
             }
             else{
-                root->node->type = type;
+                root->node->type = elem->type;
             }
             
             
@@ -649,18 +664,82 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         }
         //We have to check if second child is type INTLIT and parse args gets type of first child
         case PARSEARGS:
-        {
+        {   
+            
+            int erro = 0;
             if(root->node->children->next->node->class != INTLITE){
-                printf("ERRRROOOOOO\n");
+                printf("Erro parse args invalido dentro parentises\n");            
                 root->node->type = "undef";
+                erro = 1;
             }
-            else{
-                root->node->type = root->node->children->node->type;
+            if(strcmp(root->node->children->node->type, "int")!= 0){
+                printf("Erro parse args invalido la fora\n");
+                erro = 1;
             }
+            
+            root->node->type = "int";
+            
+            break;
+        }
+        // TODO HAVE INFINITE PARAMETERS (IN CASE FUNCTION HAS INFINITE PARAMETERS)
+        case CALL:
+        {
+            tree_list function = root->node->children;
+            tree_list parameter = function->next; 
+
+            //See if parameters piut in the function are correct and in the correct order
+
+            tab table = findTable(root_table, function->node->token->symbol);
+
+            if(table == NULL){
+                printf("ERRO tabela não exite\n");
+                return;
+            }
+
+            param func_params = table->first_param;
+            int error = 0;
+
+            while(func_params != NULL){
+                if(parameter == NULL){
+                    printf("Missing parameters\n");
+                    return;
+                }
+
+                if(strcmp(func_params->params, parameter->node->type) != 0){
+                    error = 1;
+                }
+
+                func_params = func_params->next;
+                parameter = parameter->next;
+            }
+            if(parameter != NULL){
+                printf("ERROR too many parameters\n");
+                return;
+            }
+
+            root->node->type = table->first_elem->type;
             break;
         }
         case OPERATOR:
         {
+            printf("Hello\n");
+            tree_list child1 = root->node->children;
+            if(child1 == NULL || child1->node->type == NULL){
+                printf("Child1 is null\n");
+                return;
+            }
+            tree_list child2 = child1->next;
+            if(child2 == NULL ||  child2->node->type == NULL){
+                printf("NODE %s\n", root->node->token->symbol);
+                printf("Child2 is null");
+                return;
+            }
+            if(strcmp(child1->node->type, child2->node->type) == 0){
+                root->node->type = child2->node->type;
+            }
+            else{
+                printf("ERRO DE TIPOS DIFERENTES EM OPERADORES\n");
+            }
             break;
         }
         default:
@@ -670,7 +749,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
     }
 
     
-
+    return;
 
 
 }
@@ -688,6 +767,7 @@ void createAstAnotated( tree_list root, tab table){
             tab current_table = findTable(root_table, func_id->node->token->symbol);
 
             if(current_table != NULL){
+
                 createAstAnotatedInsideFunc(func_head->next, current_table);
 
                 
@@ -697,9 +777,14 @@ void createAstAnotated( tree_list root, tab table){
             }
 
             if(root->next != NULL){
-                    createAstAnotated(root->next, root_table);
+
+                createAstAnotated(root->next, root_table);
             } 
+            break;
         }
+
+
+
         default:
         {   
             
