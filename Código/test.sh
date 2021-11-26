@@ -17,8 +17,7 @@
 #  If 'syntax error near unexpected token `$'do\r''':
 #       command:     dos2unix test.sh
 #        may need: sudo apt install dos2unix
-
-dgos=`ls ./meta2/*.dgo`
+dgos=`ls ./meta2/factorial.dgo`
 for ef in $dgos
 do
    echo "$ef"

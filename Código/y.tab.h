@@ -91,9 +91,9 @@ extern int yydebug;
     PLUSPLUS = 297,
     MINUSMINUS = 298,
     ID = 299,
-    REALLIT = 300,
-    INTLIT = 301,
-    STRLIT = 302,
+    STRLIT = 300,
+    REALLIT = 301,
+    INTLIT = 302,
     UNARY = 303
   };
 #endif
@@ -140,22 +140,23 @@ extern int yydebug;
 #define PLUSPLUS 297
 #define MINUSMINUS 298
 #define ID 299
-#define REALLIT 300
-#define INTLIT 301
-#define STRLIT 302
+#define STRLIT 300
+#define REALLIT 301
+#define INTLIT 302
 #define UNARY 303
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 59 "gocompiler.y"
+#line 60 "gocompiler.y"
 
 int value;
 char* letters;
 struct node_list *node;
+struct token *id_token;
 
-#line 159 "y.tab.h"
+#line 160 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

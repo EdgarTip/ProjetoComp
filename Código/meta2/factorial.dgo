@@ -1,6 +1,6 @@
 package main;
 
-func factorial(n int) int {
+func factorial() int {
     if n == 0 {
         return 1;
     };

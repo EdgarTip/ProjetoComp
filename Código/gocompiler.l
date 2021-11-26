@@ -3,6 +3,7 @@
 %{
     #include <stdlib.h>
     #include "y.tab.h"
+    #include "tree.h"
 
     int num_line = 1;
     int num_column = 1;  
@@ -15,6 +16,9 @@
     int last_num_column = 0;
     int last_num_line = 0;
     
+    
+    extern tree_list start_node;
+    extern int error;
 
     char *ptr = NULL;
 
@@ -97,17 +101,17 @@ newLine                         ["\r\n""\n""\r"]
 
 0[0-7]*(8|9)[0-9]*                   {printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext); update_position(yyleng, 0);}
 
-0                                           {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.letters = strdup(yytext); if(check2)return INTLIT;}
-0*[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.letters = strdup(yytext); if(check2)return INTLIT;}
-0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.letters = strdup(yytext); if(check2)return INTLIT;}
-0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.letters = strdup(yytext); if(check2)return INTLIT;}  
+0                                           {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return INTLIT;}
+0*[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return INTLIT;}
+0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1;yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return INTLIT;}
+0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return INTLIT;}  
 
-[0-9]{nums_c}*{exp}{nums_c}                                      {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1;yylval.letters = strdup(yytext); if(check2)return REALLIT;}
-0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.letters = strdup(yytext); if(check2)return REALLIT;}
-"."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.letters = strdup(yytext); if(check2)return REALLIT;}
+[0-9]{nums_c}*{exp}{nums_c}                                      {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return REALLIT;}
+0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return REALLIT;}
+"."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return REALLIT;}
 
 
-0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.letters = strdup(yytext); if(check2)return REALLIT;}   
+0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return REALLIT;}   
  
 
 
@@ -158,13 +162,13 @@ newLine                         ["\r\n""\n""\r"]
 ")"                                         {if(check) printf("RPAR\n"); update_position(yyleng, 0); last = 1; if(check2)return RPAR;}
 "]"                                         {if(check) printf("RSQ\n"); update_position(yyleng, 0); last = 1; if(check2)return RSQ;}
 
-[a-zA-Z_]{id_characters}*                    {if(check) printf("ID(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.letters = strdup(yytext); if(check2)return ID;}
+[a-zA-Z_]{id_characters}*                    {if(check) printf("ID(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return ID;}
 
 " "                                         {update_position(yyleng, 0);}
 \t                                          {update_position(yyleng, 0);}
 \r                                          {;}
 .                                           {printf("Line %d, column %d: illegal character (%s)\n", num_line, num_column, yytext); update_position(yyleng, 0);}
-\n                                          {if(last && check){printf("SEMICOLON\n");} 
+\r\n|\r|\n                                 {if(last && check){printf("SEMICOLON\n");} 
                                             if(last){ last = 0; 
                                                 if(check2) {update_position(yyleng, 3); 
                                                     return SEMICOLON;
@@ -182,7 +186,8 @@ newLine                         ["\r\n""\n""\r"]
                                                         
                                                     if(string_error == 0 && check2){
                                                         last = 1;
-                                                        yylval.letters = strdup(ptr);
+                                                        
+                                                        yylval.id_token = create_token(strdup(ptr), initial_line, initial_column);
                                                         freeBlock();
                                                         update_position(yyleng, 0);
                                                         return STRLIT;
@@ -226,7 +231,7 @@ newLine                         ["\r\n""\n""\r"]
 void yyerror ( char *s) { 
     if (strcmp(yytext, "\"") == 0) {
         // syntax error: "
-        printf ("Line %d, column %d: %s: \"%s\"\n", initial_line, initial_column, s, yylval.letters);
+        printf ("Line %d, column %d: %s: \"%s\"\n", initial_line, initial_column, s, yylval.id_token->symbol);
     } else printf ("Line %d, column %d: %s: %s\n", last_num_line, last_num_column, s, yytext);
 }
 
@@ -246,6 +251,7 @@ int main(int argc, char* argv[])
                     check = 1;
                     break;
                 case 't':
+
                     check2 = 1;
                     break;
 
@@ -256,7 +262,22 @@ int main(int argc, char* argv[])
     }
     if (check2) {
         yyparse();
-       
+
+        if(!error){
+            //printTree(start_node,0, 0);  
+
+            tab root_table = createAllTables(start_node);
+        
+            printTables(root_table);
+        
+            createAstAnotated(start_node, root_table);
+        
+            printTree(start_node,0, 1);  
+        }
+        
+        
+        freeTree(start_node);
+
     } else if (check) {
          yylex();
     }
