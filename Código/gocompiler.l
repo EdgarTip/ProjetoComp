@@ -251,6 +251,7 @@ int main(int argc, char* argv[])
                     check = 1;
                     break;
                 case 't':
+                case 's':
 
                     check2 = 1;
                     break;
