@@ -528,12 +528,10 @@ tab createAllTables(tree_list root){
             
             //Sees if function has parameters
             if(func_param_dec != NULL){
-                int first = 1;
                 //Add all parameters
                 
                 while(func_param_dec != NULL){
                     tree_list param_type = func_param_dec->node->children;
-                    tree_list param_id = param_type->next;
 
                     param aux = createParam(param_type->node->token->symbol);
                     param_root = addParameter(param_root, aux);
@@ -665,7 +663,7 @@ elem_table findElement(tab table, char *value){
 void createAstAnotatedInsideFunc(tree_list root, tab table){
 
     if(root == NULL) return;
-    
+
     if(root->next != NULL){
         createAstAnotatedInsideFunc(root->next, table);
     }
@@ -673,6 +671,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
     if(root->node->children != NULL){
         createAstAnotatedInsideFunc(root->node->children, table);
     } 
+
     switch(root->node->class){
         case INTLITE:
         {
@@ -715,15 +714,15 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         case PARSEARGS:
         {   
             
-            int erro = 0;
+
             if(root->node->children->next->node->class != INTLITE){
                 printf("Erro parse args invalido dentro parentises\n");            
                 root->node->type = "undef";
-                erro = 1;
+
             }
             if(strcmp(root->node->children->node->type, "int")!= 0){
                 printf("Erro parse args invalido la fora\n");
-                erro = 1;
+
             }
             
             root->node->type = "int";
@@ -746,23 +745,28 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
 
             param func_params = table->first_param;
-            int error = 0;
 
+            
             while(func_params != NULL){
                 if(parameter == NULL){
                     printf("Missing parameters\n");
+                    root->node->type = "undef";
+                    root->node->children->node->type = "undef";
                     return;
                 }
 
                 if(strcmp(func_params->params, parameter->node->type) != 0){
-                    error = 1;
+                    printf("ERROR\n");
                 }
 
                 func_params = func_params->next;
                 parameter = parameter->next;
             }
+    
             if(parameter != NULL){
                 printf("ERROR too many parameters\n");
+                root->node->type = "undef";
+                root->node->children->node->type = "undef";
                 return;
             }
 
@@ -773,7 +777,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             strcat(string, ")");
 
 
-
+            
             root->node->type = table->first_elem->type;
             root->node->children->node->type = string;
             break;
@@ -784,7 +788,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             tree_list child1 = root->node->children;
 
             tree_list child2 = child1->next;
-
+            
             if(strcmp(child1->node->type, child2->node->type) == 0){
                 root->node->type = child2->node->type;
             }
@@ -804,6 +808,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
             else{
                 printf("ERRO DE TIPOS DIFERENTES EM OPERADORES\n");
+                root->node->type = "undef";
             }
         
             break;
