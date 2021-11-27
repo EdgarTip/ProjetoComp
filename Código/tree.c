@@ -301,10 +301,8 @@ void printElems(elem_table element){
         tab is_table= findTable(root_table, aux1->value);
 
         //If table doesn't exist then we pass the table element
-        if(is_table==NULL){
-            printf("\t");
-        }
-        else{
+        if(is_table!=NULL){
+            
             printf("(");
             printParams(aux1->first_param); 
             printf(")");
