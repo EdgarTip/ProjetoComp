@@ -307,8 +307,18 @@ void printElems(elem_table element){
             printParams(aux1->first_param); 
             printf(")");
         }
-        
-        printf("\t%s", aux1->type);
+
+        char *lower = calloc(strlen(aux1->type)+1, sizeof(char));
+
+        int i = 0;
+        for(; i<strlen(aux1->type); i++){
+            lower[i] = tolower((unsigned char)aux1->type[i]);
+        }
+
+        lower[i++] = '\0';
+
+        printf("\t%s", lower);
+        free(lower);
         if(aux1->is_param){
             printf("\tparam\n");
         }
