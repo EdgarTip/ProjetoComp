@@ -278,7 +278,9 @@ int main(int argc, char* argv[])
         freeTree(start_node);
 
     } else if (check) {
-         yylex();
+        yylex();
+    } else {
+        yyparse();
     }
 
     return 0;

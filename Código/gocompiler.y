@@ -141,6 +141,12 @@ FuncDeclaration: FUNC ID LPAR Parameters RPAR Type FuncBody  {$$= create_node(FU
                                                         addChild($$, aux);
                                                         addChild($$, $5);}
 
+    | FUNC ID LPAR RPAR                             {$$= create_node(FUNCDECL, "FuncDecl", num_line, num_column, NULL);
+                                                        struct node_list *aux= create_node(FUNCHEADER, "FuncHeader", num_line, num_column, NULL);
+                                                        addChild(aux, create_node(IDE, 0, 0, 0, $2));
+                                                        addChild(aux, create_node(PARAMETERS, "FuncParams", num_line, num_column, NULL)); 
+                                                        addChild($$, aux);}
+;
 Parameters: ID Type                               {$$= create_node(PARAMDECL, "ParamDecl", num_line, num_column, NULL);
                                                     addChild($$, $2);
                                                     addChild($$, create_node(IDE, 0, 0, 0, $1)); 

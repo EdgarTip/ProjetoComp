@@ -2,6 +2,8 @@
 #include <string.h>
 #include <ctype.h>
 
+extern tree_list start_node;
+
 tab root_table = NULL;
 //--Tree--
 
@@ -454,7 +456,8 @@ elem_table createElem(char *value,  char *type, param parameter, int is_param){
 
 //Create a new table. If it is the global one starts global table variable
 tab createTable(elem_table table_element, int is_global){
-
+     
+    //if (findTable(root_table, ) == NULL) {}
     tab new_table = (struct table*)malloc(sizeof(struct table));
     if(!is_global){
         new_table->first_elem= createElem("return", table_element->type, NULL, 0);
@@ -514,6 +517,9 @@ void funcBodyTable(tree_list root, tab table){
         }
         default:
         {   
+            printf("not vardec!!!!!!!\n");
+            printf("STuff: %s\n", root->node->token->symbol);
+            printTree(start_node ,0, 0);
             if(root->node->children != NULL){
                 funcBodyTable(root->node->children, table); 
             }
