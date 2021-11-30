@@ -11,6 +11,7 @@ id_token create_token(char *value, int line, int col) {
   tok->symbol = value;
   tok->line = line;
   tok->column = col;
+  tok->first_param = NULL;
   return tok;
 }
 
@@ -47,6 +48,7 @@ tree_list create_node(enum class_name class, char *symbol, int line, int column,
         list->node->token->symbol = symbol;
         list->node->token->line = line;
         list->node->token->column = column;
+        list->node->token->first_param = NULL;
     }
     else{
         list->node->token = tok;
@@ -187,6 +189,39 @@ output:
 ....4
 ..3
 */
+
+
+char * lowerString(char *string){
+
+    char *lower = calloc(strlen(string)+1, sizeof(char));
+
+        int i = 0;
+        for(; i<strlen(string); i++){
+            lower[i] = tolower((unsigned char)string[i]);
+        }
+
+        lower[i++] = '\0';
+        return lower;
+        
+}
+
+
+void printParams(param params){
+    param aux2 = params;
+
+    while( aux2 != NULL){
+
+        char *lower = lowerString(aux2->params);
+        if(aux2->next != NULL)printf("%s,", lower);
+        else printf("%s", lower);
+        
+        free(lower);
+        aux2 = aux2->next;
+    }
+    return;
+}
+
+
 void printTree(tree_list list, int depth, int semantic){
     for(int i = 0; i < depth; i++){
         printf("..");
@@ -194,26 +229,52 @@ void printTree(tree_list list, int depth, int semantic){
     switch(list->node->class){
         case IDE:
         {
-            if(!semantic || list->node->type == NULL)printf("Id(%s)\n", list->node->token->symbol);
-            else printf("Id(%s) - %s\n", list->node->token->symbol, list->node->type);
+            if(!semantic)printf("Id(%s)\n", list->node->token->symbol);
+            else{
+                if(list->node->token->first_param != NULL || (list->node->type != NULL && strcmp(list->node->type,"func") == 0 )){
+                    printf("Id(%s) - (", list->node->token->symbol);
+                    printParams(list->node->token->first_param);
+                    printf(")\n");
+                }
+                else if(list->node->type == NULL){
+                    printf("Id(%s)\n", list->node->token->symbol);
+                }
+                else{
+                    char* string = lowerString(list->node->type);
+                    printf("Id(%s) - %s\n", list->node->token->symbol, string);
+                    free(string);
+                }
+            }
             break;
         }
         case REALLITE:
         {
             if(!semantic || list->node->type == NULL) printf("RealLit(%s)\n", list->node->token->symbol);
-            else printf("RealLit(%s) - %s\n", list->node->token->symbol, list->node->type);
+            else{
+                char* string = lowerString(list->node->type);
+                printf("RealLit(%s) - %s\n", list->node->token->symbol, string);
+                free(string);
+            } 
             break;
         }
         case STRLITE:
         {
              if(!semantic || list->node->type == NULL)printf("StrLit(\"%s\")\n", list->node->token->symbol);
-             else printf("StrLit(\"%s\") - %s\n", list->node->token->symbol, list->node->type);
+             else{
+                 char* string = lowerString(list->node->type);
+                 printf("StrLit(\"%s\") - %s\n", list->node->token->symbol, string);
+                 free(string);
+             } 
             break;
         }
         case INTLITE:
         {
             if(!semantic || list->node->type == NULL) printf("IntLit(%s)\n", list->node->token->symbol);
-            else printf("IntLit(%s) - %s\n", list->node->token->symbol, list->node->type);
+            else{
+                char* string = lowerString(list->node->type);
+                printf("IntLit(%s) - %s\n", list->node->token->symbol, string);
+                free(string);
+            } 
             break;
         }
         case INTE:
@@ -224,7 +285,11 @@ void printTree(tree_list list, int depth, int semantic){
         default:
         {
             if(!semantic || list->node->type == NULL)printf("%s\n", list->node->token->symbol);
-            else printf("%s - %s\n", list->node->token->symbol, list->node->type);
+            else{
+                char* string = lowerString(list->node->type);
+                printf("%s - %s\n", list->node->token->symbol, string);
+                free(string);
+            } 
             break;
         }
     }
@@ -253,28 +318,6 @@ int checkExists(tab table, char* name){
     }
     
     return 0;
-}
-
-void printParams(param params){
-    param aux2 = params;
-
-    while( aux2 != NULL){
-
-        char *lower = calloc(strlen(aux2->params)+1, sizeof(char));
-
-        int i = 0;
-        for(; i<strlen(aux2->params); i++){
-            lower[i] = tolower((unsigned char)aux2->params[i]);
-        }
-
-        lower[i++] = '\0';
-        if(aux2->next != NULL)printf("%s, ", lower);
-        else printf("%s", lower);
-        
-        free(lower);
-        aux2 = aux2->next;
-    }
-    return;
 }
 
 //Finds a table by its name. Returns NULL if table is not found
@@ -308,14 +351,7 @@ void printElems(elem_table element){
             printf(")");
         }
 
-        char *lower = calloc(strlen(aux1->type)+1, sizeof(char));
-
-        int i = 0;
-        for(; i<strlen(aux1->type); i++){
-            lower[i] = tolower((unsigned char)aux1->type[i]);
-        }
-
-        lower[i++] = '\0';
+        char *lower = lowerString(aux1->type);
 
         printf("\t%s", lower);
         free(lower);
@@ -409,6 +445,7 @@ elem_table createElem(char *value,  char *type, param parameter, int is_param){
     elem->first_param = parameter;
     elem->is_param = is_param;
     elem->next = NULL;
+    elem->has_been_passed = 0;
   
     return elem;
 }
@@ -647,7 +684,7 @@ elem_table findElement(tab table, char *value){
     //See if variable is in local table
     elem_table aux1 = table->first_elem;
     while(aux1 != NULL){
-        if(strcmp(aux1->value, value) == 0){
+        if(strcmp(aux1->value, value) == 0 && !aux1->has_been_passed){
             return aux1;
         }
 
@@ -671,11 +708,12 @@ elem_table findElement(tab table, char *value){
 void createAstAnotatedInsideFunc(tree_list root, tab table){
 
     if(root == NULL) return;
-
+    
     if(root->next != NULL){
         createAstAnotatedInsideFunc(root->next, table);
     }
 
+    
     if(root->node->children != NULL){
         createAstAnotatedInsideFunc(root->node->children, table);
     } 
@@ -688,18 +726,31 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         }
         case IDE:
         {   
+
+            //See if it is a function
+            tab aux = findTable(root_table, root->node->token->symbol);
             
-            //Sees if element exists and if it does then gets the type as a return parameter. If it receives no value it means it does not exist
-            elem_table elem = findElement(table, root->node->token->symbol);
-            if(elem == NULL){
-                printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
-                root->node->type = "undef";
+            //Its a table
+            if(aux != NULL){
+                root->node->token->first_param = aux->first_param;
+                root->node->type = "func";
             }
+
             else{
-                root->node->type = elem->type;
+
+                //Sees if element exists and if it does then gets the type as a return parameter. If it receives no value it means it does not exist
+                elem_table elem = findElement(table, root->node->token->symbol);
+
+                if(elem == NULL){
+                    printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
+                    root->node->type = "undef";
+                }
+                else{
+
+                    root->node->type = elem->type;
+                }
             }
-            
-            
+                            
             break;
         }
         case REALLITE:
@@ -716,6 +767,9 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         case VARDEC:
         {
             root->node->children->next->node->type = NULL;
+            elem_table elem = findElement(table, root->node->children->next->node->token->symbol);
+            elem->has_been_passed=1;
+
             break;
         }
         //We have to check if second child is type INTLIT and parse args gets type of first child
@@ -738,10 +792,25 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             break;
         }
         // TODO HAVE INFINITE PARAMETERS (IN CASE FUNCTION HAS INFINITE PARAMETERS)
+        case UNARYE:
+        {  
+            char *string1 = lowerString(root->node->children->node->type);
+            if(strcmp(string1, "float32") == 0 || strcmp(string1, "int") == 0){
+                root->node->type = root->node->children->node->type;
+            }
+            else{
+                root->node->type = "undef";
+                printf("Erro unario\n");
+            }
+            free(string1);
+            break;
+        }
         case CALL:
         {
+            
             tree_list function = root->node->children;
             tree_list parameter = function->next; 
+
 
             //See if parameters piut in the function are correct and in the correct order
             
@@ -752,25 +821,30 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                 return;
             }
 
+ 
             param func_params = table->first_param;
 
-            
             while(func_params != NULL){
                 if(parameter == NULL){
+
                     printf("Missing parameters\n");
                     root->node->type = "undef";
                     root->node->children->node->type = "undef";
                     return;
                 }
-
-                if(strcmp(func_params->params, parameter->node->type) != 0){
-                    printf("ERROR\n");
+                char *string1 =lowerString(parameter->node->type);
+                char *string2 =lowerString(func_params->params);
+                if(strcmp(string1,string2) != 0){
+                    printf("ERROR PARAMETROS COM TIPOS ERRADOS\n");
                 }
 
+                free(string1);
+                free(string2);
                 func_params = func_params->next;
                 parameter = parameter->next;
+
             }
-    
+
             if(parameter != NULL){
                 printf("ERROR too many parameters\n");
                 root->node->type = "undef";
@@ -779,30 +853,69 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
 
             //Creates the string in format "(value)"
-            char *string = malloc(strlen(root->node->children->node->type) +3 );
-            strcpy(string, "(");
-            strcat(string, root->node->children->node->type);
-            strcat(string, ")");
+         
 
+            if(strcmp(table->first_elem->type,"none")!=0){
+                root->node->type = table->first_elem->type;
+            }
 
+ 
             
-            root->node->type = table->first_elem->type;
-            root->node->children->node->type = string;
+            break;
+        }
+        case ASSIGNE:
+        {
+            tree_list child_left = root->node->children;
+            tree_list child_right = child_left->next;
+
+            char *string1 = lowerString(child_right->node->type);
+            char *string2 = lowerString(child_left->node->type);
+
+            if(strcmp(string1, string2) == 0){
+                root->node->type = child_left->node->type;  
+            }
+            else{
+                root->node->type = "undef";
+                printf("Erro\n");
+            }
+
+            free(string1);
+            free(string2);
             break;
         }
         case OPERATOR:
         {
 
             tree_list child1 = root->node->children;
-
             tree_list child2 = child1->next;
-            
-            if(strcmp(child1->node->type, child2->node->type) == 0){
+
+            char* string1 = lowerString(child1->node->type);
+            char* string2 = lowerString(child2->node->type);
+
+            if(strcmp(string1, string2) == 0){
                 root->node->type = child2->node->type;
             }
             else{
+                root->node->type = "undef";
                 printf("ERRO DE TIPOS DIFERENTES EM OPERADORES\n");
             }
+            free(string1);
+            free(string2);
+            break;
+        }
+        case NOTE:
+        {
+            if(strcmp(root->node->children->node->type ,"Bool") == 0){
+                root->node->type = "Bool";
+            }
+            else{
+                root->node->type = "undef";
+                printf("Error with Not value\n");
+            }
+
+
+
+
             break;
         }
         case CONDITIONOPERATOR:
@@ -812,12 +925,12 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             tree_list child2 = child1->next;
 
             if(strcmp(child1->node->type, child2->node->type) == 0){
-                root->node->type = "bool";
+                root->node->type = "Bool";
             }
             else{
                 printf("ERRO DE TIPOS DIFERENTES EM OPERADORES\n");
                 root->node->type = "undef";
-            }
+            }   
         
             break;
         }
@@ -846,7 +959,14 @@ void createAstAnotated( tree_list root, tab table){
 
             if(current_table != NULL){
 
+
                 createAstAnotatedInsideFunc(func_head->next, current_table);
+                elem_table first_elem = current_table->first_elem;
+
+                while(first_elem != NULL){
+                    first_elem->has_been_passed=0;
+                    first_elem = first_elem->next;
+                }
 
                 
             }

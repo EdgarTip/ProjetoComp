@@ -13,11 +13,13 @@ typedef struct table *tab;
 typedef struct parameter *param;
 
 enum class_name{PROGRAM, IDE, DECLARATION, VARDEC, VARSPEC, INTE, FLOAT32E, BOOLE, STRINGE, FUNCDECL, PARAMETERS, INTLITE, FUNCBODY, VARSANDSTAT, VARSANDSTATOPC, STATEMENT, STATESEMI, PARSEARGS, FUNCINVOCATION, REALLITE, STRLITE, FUNCHEADER, CALL, RETURNE, IFE, CONDITIONOPERATOR,
-OPERATOR, PARAMDECL, PRINTE, BLOCK, FORE, UNARYE};
+OPERATOR, PARAMDECL, PRINTE, BLOCK, FORE, UNARYE, ASSIGNE, NOTE};
 
+//O first_param existe apenas para caso que um ID seja uma função facilmente consigamos extrair os parametros. Para todos os outros nodos será NULL
 struct token{
     char *symbol;
     int line, column;
+    param first_param;
 };
 
 
@@ -43,6 +45,7 @@ struct element_table{
     char *value;
     char *type;
     int is_param;
+    int has_been_passed; 
 
     param first_param;
     elem_table next;

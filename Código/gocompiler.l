@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
             //printTree(start_node,0, 0);  
 
             tab root_table = createAllTables(start_node);
-        
+
             printTables(root_table);
             createAstAnotated(start_node, root_table);
             printTree(start_node,0, 1);  

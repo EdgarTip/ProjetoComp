@@ -164,7 +164,7 @@ VarsAndStatementsOpc: VarDeclaration              {$$= $1;}
     |  /*empty*/                                               {$$ = NULL;}
     ;
 
-Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGN, "Assign", num_line, num_column, NULL); 
+Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGNE, "Assign", num_line, num_column, NULL); 
                                                         addChild($$,create_node(IDE,0, 0, 0, $1)); 
                                                         addChild($$,$3);
                                                         
@@ -245,7 +245,7 @@ Expr: Expr OR Expr                                             {$$= create_node(
     |   Expr MOD Expr                                          {$$= create_node(OPERATOR, "Mod", num_line, num_column, NULL); addChild($$,$1); addChild($$,$3); }
     |   MINUS Expr  %prec UNARY                                {$$= create_node(UNARYE, "Minus", num_line, num_column, NULL); addChild($$,$2);}
     |   PLUS  Expr  %prec UNARY                                {$$= create_node(UNARYE, "Plus", num_line, num_column, NULL); addChild($$,$2); }
-    |   NOT  Expr                                              {$$= create_node(OPERATOR, "Not", num_line, num_column, NULL); addChild($$,$2); }
+    |   NOT  Expr                                              {$$= create_node(NOTE, "Not", num_line, num_column, NULL); addChild($$,$2); }
     |   INTLIT                                                 {$$ = create_node(INTLITE, 0, 0, 0, $1);}
     |   REALLIT                                                {$$ = create_node(REALLITE, 0, 0, 0, $1);}
     |   ID                                                     {$$ = create_node(IDE, 0, 0, 0, $1);}
