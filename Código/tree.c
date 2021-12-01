@@ -370,6 +370,29 @@ void printElems(elem_table element){
 }
 
 
+void checkParams(tab root) {
+    printf("Is null: %i\n", (root==NULL));
+    if(root == NULL) return;
+
+    printf("checkParams %s\n", root->name);
+    printf("Value: %s\n", root->first_elem->value);
+    elem_table aux = root->first_elem;
+
+    while(aux != NULL) {
+        printf("Value: %s\n", aux->value);
+        printf("IS_USED: %d\n", aux->is_used);
+
+        tab is_table= findTable(root_table, aux->value);
+        if(is_table==NULL && aux->is_used <= 1 && strcmp(aux->value, "return")!=0) {
+            printf("Line %d, column %d: Symbol %s declared but never used\n", aux->line, aux->column, aux->value);
+        }
+        aux = aux->next;
+    }
+
+    checkParams(root->next);
+    return;
+}
+
 
 
 void printTables(tab root){
@@ -439,11 +462,14 @@ void insertElementTable(tab table, elem_table element){
 }
 
 //Create a new element
-elem_table createElem(char *value,  char *type, param parameter, int is_param){
+elem_table createElem(char *value,  char *type, param parameter, int is_param, int line, int column){
     elem_table elem = (struct element_table*)malloc(sizeof(struct element_table));
 
     elem->value = value;
     elem->type = type;
+    elem->is_used = 0;
+    elem->line = line;
+    elem->column = column;
     elem->first_param = parameter;
     elem->is_param = is_param;
     elem->next = NULL;
@@ -460,7 +486,7 @@ tab createTable(elem_table table_element, int is_global){
     //if (findTable(root_table, ) == NULL) {}
     tab new_table = (struct table*)malloc(sizeof(struct table));
     if(!is_global){
-        new_table->first_elem= createElem("return", table_element->type, NULL, 0);
+        new_table->first_elem= createElem("return", table_element->type, NULL, 0, 0, 0);
 
 
         new_table->first_param = table_element->first_param;
@@ -502,7 +528,7 @@ void funcBodyTable(tree_list root, tab table){
             //Insert new value into current table
             if(!checkExists(table, var_id->node->token->symbol)){ 
                 
-                insertElementTable(table, createElem(var_id->node->token->symbol, var_type->node->token->symbol, NULL, 0));
+                insertElementTable(table, createElem(var_id->node->token->symbol, var_type->node->token->symbol, NULL, 0, var_id->node->token->line, var_id->node->token->column));
             }
             else{
 
@@ -517,9 +543,9 @@ void funcBodyTable(tree_list root, tab table){
         }
         default:
         {   
-            printf("not vardec!!!!!!!\n");
-            printf("STuff: %s\n", root->node->token->symbol);
-            printTree(start_node ,0, 0);
+            //printf("not vardec!!!!!!!\n");
+            //printf("STuff: %s\n", root->node->token->symbol);
+            //printTree(start_node ,0, 0);
             if(root->node->children != NULL){
                 funcBodyTable(root->node->children, table); 
             }
@@ -609,7 +635,7 @@ tab createAllTables(tree_list root){
                     type = "none";
                 }
 
-                elem_table func_elem = createElem(func_id->node->token->symbol, type, param_root, 0);
+                elem_table func_elem = createElem(func_id->node->token->symbol, type, param_root, 0, func_id->node->token->line, func_id->node->token->column);
 
                 insertElementTable(root_table, func_elem);
                 current_table = createTable(func_elem, 0);
@@ -626,7 +652,7 @@ tab createAllTables(tree_list root){
                         //Param Id
                         tree_list param_id = param_type->next;
                         if(!checkExists(current_table, param_id->node->token->symbol)){
-                            insertElementTable(current_table, createElem(param_id->node->token->symbol, param_type->node->token->symbol, NULL, 1));
+                            insertElementTable(current_table, createElem(param_id->node->token->symbol, param_type->node->token->symbol, NULL, 1, param_id->node->token->line, param_id->node->token->column));
                        
                         }
                         else{
@@ -660,7 +686,7 @@ tab createAllTables(tree_list root){
         
             //Insert new value into current table
             if(!checkExists(root_table, child2->node->token->symbol)){ 
-                insertElementTable(root_table, createElem(child2->node->token->symbol, child1->node->token->symbol, NULL, 0));
+                insertElementTable(root_table, createElem(child2->node->token->symbol, child1->node->token->symbol, NULL, 0, child2->node->token->line, child2->node->token->column));
             }
 
             else{
@@ -724,6 +750,8 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         createAstAnotatedInsideFunc(root->node->children, table);
     } 
 
+    //printf("%u\n", root->node->class);
+
     switch(root->node->class){
         case INTLITE:
         {
@@ -743,7 +771,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
 
             else{
-
+                printf("__________%s__________", table->name);      //TODO
                 //Sees if element exists and if it does then gets the type as a return parameter. If it receives no value it means it does not exist
                 elem_table elem = findElement(table, root->node->token->symbol);
 
@@ -751,9 +779,11 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                     printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
                     root->node->type = "undef";
                 }
-                else{
-
+                else if (strcmp(table->name, "global") == 0){
                     root->node->type = elem->type;
+                    printf("________here is_used %s\n", elem->value);
+                    
+                    elem->is_used++;
                 }
             }
                             
@@ -823,7 +853,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             tab table = findTable(root_table, function->node->token->symbol);
 
             if(table == NULL){
-                printf("ERRO tabela não exite\n");
+                //printf("ERRO tabela não exite\n");
                 return;
             }
 
@@ -903,7 +933,16 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
             else{
                 root->node->type = "undef";
-                printf("ERRO DE TIPOS DIFERENTES EM OPERADORES\n");
+
+                if (strcmp(root->node->token->symbol, "Add") == 0) {
+                    printf("Line %d, column %d: Operator + cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                root->node->children->next->node->type, root->node->children->node->type);
+                
+                } else {
+                    printf("ERRO DE TIPOS DIFERENTES EM OPERADORES\n");
+                }
+               
+                
             }
             free(string1);
             free(string2);

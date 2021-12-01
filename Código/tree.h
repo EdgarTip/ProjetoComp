@@ -45,7 +45,10 @@ struct element_table{
     char *value;
     char *type;
     int is_param;
+    char is_used;
     int has_been_passed; 
+    int line;
+    int column;
 
     param first_param;
     elem_table next;
@@ -68,5 +71,6 @@ void add_max_next(tree_list new_node, tree_list next_node);
 int number_of_children(tree_list node);
 void add_child_to_all(tree_list root, tree_list child);
 tab createAllTables(tree_list root);
+void checkParams(tab root);
 void printTables(tab root);
 void createAstAnotated( tree_list root, tab table);
