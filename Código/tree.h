@@ -13,7 +13,7 @@ typedef struct table *tab;
 typedef struct parameter *param;
 
 enum class_name{PROGRAM, IDE, DECLARATION, VARDEC, VARSPEC, INTE, FLOAT32E, BOOLE, STRINGE, FUNCDECL, PARAMETERS, INTLITE, FUNCBODY, VARSANDSTAT, VARSANDSTATOPC, STATEMENT, STATESEMI, PARSEARGS, FUNCINVOCATION, REALLITE, STRLITE, FUNCHEADER, CALL, RETURNE, IFE, CONDITIONOPERATOR,
-OPERATOR, PARAMDECL, PRINTE, BLOCK, FORE, UNARYE, ASSIGNE, NOTE};
+OPERATOR, PARAMDECL, PRINTE, BLOCK, FORE, UNARYE, ASSIGNE, NOTE, LOGICALOPERATOR};
 
 //O first_param existe apenas para caso que um ID seja uma função facilmente consigamos extrair os parametros. Para todos os outros nodos será NULL
 struct token{
@@ -45,7 +45,10 @@ struct element_table{
     char *value;
     char *type;
     int is_param;
+    char is_used;
     int has_been_passed; 
+    int line;  // may be unused
+    int column;   // may be unused
 
     param first_param;
     elem_table next;
@@ -68,5 +71,6 @@ void add_max_next(tree_list new_node, tree_list next_node);
 int number_of_children(tree_list node);
 void add_child_to_all(tree_list root, tree_list child);
 tab createAllTables(tree_list root);
+void checkParams(tab root);
 void printTables(tab root);
 void createAstAnotated( tree_list root, tab table);

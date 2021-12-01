@@ -368,6 +368,25 @@ void printElems(elem_table element){
 }
 
 
+void checkParams(tab root) {
+
+    if(root == NULL) return;
+
+    elem_table aux = root->first_elem;
+
+    while(aux != NULL) {
+
+        tab is_table= findTable(root_table, aux->value);
+
+        if(is_table==NULL && aux->is_used == 0 && strcmp(aux->value, "return")!=0) {
+            printf("Line %d, column %d: Symbol %s declared but never used\n", aux->line, aux->column, aux->value);
+        }
+        aux = aux->next;
+    }
+
+    checkParams(root->next);
+    return;
+}
 
 
 void printTables(tab root){
@@ -437,11 +456,16 @@ void insertElementTable(tab table, elem_table element){
 }
 
 //Create a new element
-elem_table createElem(char *value,  char *type, param parameter, int is_param){
+elem_table createElem(char *value,  char *type, param parameter, int is_param, int line, int column){
     elem_table elem = (struct element_table*)malloc(sizeof(struct element_table));
 
     elem->value = value;
     elem->type = type;
+    if (is_param) elem->is_used = -1;
+    else elem->is_used = 0;
+    elem->line = line;
+
+    elem->column = column;
     elem->first_param = parameter;
     elem->is_param = is_param;
     elem->next = NULL;
@@ -457,7 +481,7 @@ tab createTable(elem_table table_element, int is_global){
 
     tab new_table = (struct table*)malloc(sizeof(struct table));
     if(!is_global){
-        new_table->first_elem= createElem("return", table_element->type, NULL, 0);
+        new_table->first_elem= createElem("return", table_element->type, NULL, 0, 0, 0);
 
 
         new_table->first_param = table_element->first_param;
@@ -499,7 +523,7 @@ void funcBodyTable(tree_list root, tab table){
             //Insert new value into current table
             if(!checkExists(table, var_id->node->token->symbol)){ 
                 
-                insertElementTable(table, createElem(var_id->node->token->symbol, var_type->node->token->symbol, NULL, 0));
+                insertElementTable(table, createElem(var_id->node->token->symbol, var_type->node->token->symbol, NULL, 0, var_id->node->token->line, var_id->node->token->column));
             }
             else{
 
@@ -603,7 +627,7 @@ tab createAllTables(tree_list root){
                     type = "none";
                 }
 
-                elem_table func_elem = createElem(func_id->node->token->symbol, type, param_root, 0);
+                elem_table func_elem = createElem(func_id->node->token->symbol, type, param_root, 0, func_id->node->token->line, func_id->node->token->column);
 
                 insertElementTable(root_table, func_elem);
                 current_table = createTable(func_elem, 0);
@@ -620,7 +644,7 @@ tab createAllTables(tree_list root){
                         //Param Id
                         tree_list param_id = param_type->next;
                         if(!checkExists(current_table, param_id->node->token->symbol)){
-                            insertElementTable(current_table, createElem(param_id->node->token->symbol, param_type->node->token->symbol, NULL, 1));
+                            insertElementTable(current_table, createElem(param_id->node->token->symbol, param_type->node->token->symbol, NULL, 1, func_id->node->token->line, func_id->node->token->column));
                        
                         }
                         else{
@@ -654,7 +678,7 @@ tab createAllTables(tree_list root){
         
             //Insert new value into current table
             if(!checkExists(root_table, child2->node->token->symbol)){ 
-                insertElementTable(root_table, createElem(child2->node->token->symbol, child1->node->token->symbol, NULL, 0));
+                insertElementTable(root_table, createElem(child2->node->token->symbol, child1->node->token->symbol, NULL, 0, root->node->token->line, root->node->token->column));
             }
 
             else{
@@ -746,8 +770,10 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                     root->node->type = "undef";
                 }
                 else{
-
+                    
                     root->node->type = elem->type;
+                    if (elem->is_used >= 0) elem->is_used++;
+
                 }
             }
                             
@@ -769,6 +795,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             root->node->children->next->node->type = NULL;
             elem_table elem = findElement(table, root->node->children->next->node->token->symbol);
             elem->has_been_passed=1;
+            elem->is_used--;
 
             break;
         }
@@ -834,8 +861,10 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                 }
                 char *string1 =lowerString(parameter->node->type);
                 char *string2 =lowerString(func_params->params);
+                
 
-                if(strcmp(string1,string2) != 0){
+                /*if(strcmp(string1,string2) != 0){
+                    
                     if (strcmp(lowerString(parameter->node->token->symbol), "add") == 0) {
                         printf("Line %d, column %d: Operator + cannot be applied to types %s, %s\n", parameter->node->token->line, parameter->node->token->column - (int)strlen(parameter->node->token->symbol),\
                         lowerString(parameter->node->children->node->type), lowerString(parameter->node->children->next->node->type));
@@ -849,7 +878,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                         lowerString(parameter->node->children->node->type), lowerString(parameter->node->children->next->node->type));
                     }
                     
-                }
+                }*/
 
                 free(string1);
                 free(string2);
@@ -889,11 +918,8 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
             else{
                 root->node->type = "undef";
-                if (strcmp(lowerString(root->node->token->symbol), "assign") == 0) {
-                    printf("Line %d, column %d: Operator = cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column - (int)strlen(root->node->token->symbol), \
-                lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
-
-                }
+                printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                    root->node->token->symbol, lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
             }
 
             free(string1);
@@ -914,10 +940,41 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
             else{
                 root->node->type = "undef";
-                //printf("Line %d, column %d: ERRO DE TIPOS DIFERENTES EM OPERADORES\n", root->node->token->line, root->node->token->column);
+                
+                if (strcmp(lowerString(root->node->token->symbol), "not") == 0) {
+                    printf("Line %d, column %d: Operator %s cannot be applied to type %s\n", root->node->token->line, root->node->token->column,\
+                    root->node->token->symbol, lowerString(root->node->children->node->type));
+                
+                } else {
+                    printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                    root->node->token->symbol, lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                    
+                
             }
+
             free(string1);
             free(string2);
+            break;
+        }
+        case LOGICALOPERATOR:
+        {
+             tree_list child1 = root->node->children;
+            tree_list child2 = child1->next;
+
+            char* string1 = lowerString(child1->node->type);
+            char* string2 = lowerString(child2->node->type);
+
+            if (strcmp(string1,"bool")==0 && strcmp(string2,"bool")==0) {
+                root->node->type = child2->node->type;
+            } else {
+                root->node->type = "bool";
+
+                 printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                     root->node->token->symbol, lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                
+            }
+
             break;
         }
         case NOTE:
@@ -946,12 +1003,10 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                 root->node->type = "Bool";
             }
             else{
-                if (strcmp(lowerString(root->node->token->symbol), "lt") == 0) {
-                        printf("Line %d, column %d: Operator < cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column - (int)strlen(root->node->token->symbol),\
-                        lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
-                   
-                }
-                //printf("Line %d, column %d: ERRO DE TIPOS DIFERENTES EM OPERADORES2\n", root->node->token->line, root->node->token->column);
+                printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                    root->node->token->symbol, lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+
+                
                 root->node->type = "undef";
             }   
         

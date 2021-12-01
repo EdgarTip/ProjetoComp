@@ -136,27 +136,27 @@ newLine                         ["\r\n""\n""\r"]
 
 {reserved}                                  {if(check) printf("RESERVED(%s)\n", yytext); update_position(yyleng, 0); last = 0; if (check2 && strcmp(yytext, "++")== 0) {return PLUSPLUS;}; if (check2 && strcmp(yytext, "--")== 0) {return MINUSMINUS;}}
 
-"=="                                        {if(check) printf("EQ\n"); update_position(yyleng, 0); last = 0; if(check2)return EQ;}
-">="                                        {if(check) printf("GE\n"); update_position(yyleng, 0); last = 0; if(check2)return GE;}
-"<="                                        {if(check) printf("LE\n"); update_position(yyleng, 0); last = 0; if(check2)return LE;}
-"!="                                        {if(check) printf("NE\n"); update_position(yyleng, 0); last = 0; if(check2)return NE;}
-"&&"                                        {if(check) printf("AND\n"); update_position(yyleng, 0); last = 0; if(check2)return AND;}
-"||"                                        {if(check) printf("OR\n"); update_position(yyleng, 0); last = 0; if(check2)return OR;}
+"=="                                        {if(check) printf("EQ\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return EQ;}
+">="                                        {if(check) printf("GE\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return GE;}
+"<="                                        {if(check) printf("LE\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return LE;}
+"!="                                        {if(check) printf("NE\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return NE;}
+"&&"                                        {if(check) printf("AND\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return AND;}
+"||"                                        {if(check) printf("OR\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return OR;}
 
 ";"                                         {if(check) printf("SEMICOLON\n"); update_position(yyleng, 0); last = 0; if(check2)return SEMICOLON;}
 ","                                         {if(check) printf("COMMA\n"); update_position(yyleng, 0); last = 0; if(check2)return COMMA;}
 "_"                                         {if(check) printf("BLANKID\n"); update_position(yyleng, 0); last = 0; if(check2)return BLANKID;}
-"="                                         {if(check) printf("ASSIGN\n"); update_position(yyleng, 0); last = 0; if(check2)return ASSIGN;}
-"*"                                         {if(check) printf("STAR\n"); update_position(yyleng, 0); last = 0; if(check2)return STAR;}
-"/"                                         {if(check) printf("DIV\n"); update_position(yyleng, 0); last = 0; if(check2)return DIV;}
-"-"                                         {if(check) printf("MINUS\n"); update_position(yyleng, 0); last = 0; if(check2)return MINUS;}
-"+"                                         {if(check) printf("PLUS\n"); update_position(yyleng, 0); last = 0; if(check2)return PLUS;}
-">"                                         {if(check) printf("GT\n"); update_position(yyleng, 0); last = 0; if(check2)return GT;}
+"="                                         {if(check) printf("ASSIGN\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return ASSIGN;}
+"*"                                         {if(check) printf("STAR\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return STAR;}
+"/"                                         {if(check) printf("DIV\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return DIV;}
+"-"                                         {if(check) printf("MINUS\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return MINUS;}
+"+"                                         {if(check) printf("PLUS\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return PLUS;}
+">"                                         {if(check) printf("GT\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return GT;}
 "{"                                         {if(check) printf("LBRACE\n"); update_position(yyleng, 0); last = 0; if(check2)return LBRACE;}
 "("                                         {if(check) printf("LPAR\n"); update_position(yyleng, 0); last = 0; if(check2)return LPAR;}
 "["                                         {if(check) printf("LSQ\n"); update_position(yyleng, 0); last = 0; if(check2)return LSQ;}
-"<"                                         {if(check) printf("LT\n"); update_position(yyleng, 0); last = 0; if(check2)return LT;}
-"%"                                         {if(check) printf("MOD\n"); update_position(yyleng, 0); last = 0; if(check2)return MOD;}
+"<"                                         {if(check) printf("LT\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return LT;}
+"%"                                         {if(check) printf("MOD\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return MOD;}
 "!"                                         {if(check) printf("NOT\n"); update_position(yyleng, 0); last = 0; if(check2)return NOT;}
 "}"                                         {if(check) printf("RBRACE\n"); update_position(yyleng, 0); last = 1; if(check2)return RBRACE;}
 ")"                                         {if(check) printf("RPAR\n"); update_position(yyleng, 0); last = 1; if(check2)return RPAR;}
@@ -271,6 +271,7 @@ int main(int argc, char* argv[])
 
             //printTables(root_table);
             createAstAnotated(start_node, root_table);
+            checkParams(root_table);
             //printTree(start_node,0, 1);  
         }
         
