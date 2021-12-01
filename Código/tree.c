@@ -863,22 +863,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                 char *string2 =lowerString(func_params->params);
                 
 
-                /*if(strcmp(string1,string2) != 0){
-                    
-                    if (strcmp(lowerString(parameter->node->token->symbol), "add") == 0) {
-                        printf("Line %d, column %d: Operator + cannot be applied to types %s, %s\n", parameter->node->token->line, parameter->node->token->column - (int)strlen(parameter->node->token->symbol),\
-                        lowerString(parameter->node->children->node->type), lowerString(parameter->node->children->next->node->type));
-                   
-                    } else if (strcmp(lowerString(parameter->node->token->symbol), "not") == 0) {
-                        printf("Line %d, column %d: Operator ! cannot be applied to type %s\n", parameter->node->token->line, parameter->node->token->column - (int)strlen(parameter->node->token->symbol),\
-                        lowerString(parameter->node->children->node->type));
-                   
-                    } else {
-                        printf("Line %d, column %d: Operator undef cannot be applied to types %s, %s\n", parameter->node->token->line, parameter->node->token->column - (int)strlen(parameter->node->token->symbol),\
-                        lowerString(parameter->node->children->node->type), lowerString(parameter->node->children->next->node->type));
-                    }
-                    
-                }*/
+               
 
                 free(string1);
                 free(string2);
@@ -977,6 +962,27 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
 
             break;
         }
+
+        case FORE:
+        {
+            int class_num = root->node->children->node->class;
+            if (class_num != OPERATOR && class_num != CONDITIONOPERATOR) {
+                printf("Line %d, column %d: Incompatible type %s in for statement\n", root->node->token->line, root->node->token->column, root->node->children->node->type);
+            }
+            
+            break;
+        }
+
+        case IFE:
+        {
+            int class_num = root->node->children->node->class;
+            if (class_num != OPERATOR && class_num != CONDITIONOPERATOR) {
+                printf("Line %d, column %d: Incompatible type %s in if statement\n", root->node->token->line, root->node->token->column, root->node->children->node->type);
+            }
+
+            break;
+        }
+
         case NOTE:
         {
             if(strcmp(root->node->children->node->type ,"Bool") == 0){
@@ -984,8 +990,8 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
             else{
                 root->node->type = "undef";
-                //already catch in line 843
-                //printf("Line %d, column %d: Error with Not value\n", root->node->token->line, root->node->token->column);
+                printf("Line %d, column %d: Operator %s cannot be applied to type %s\n", root->node->token->line, root->node->token->column,\
+                    root->node->token->symbol, lowerString(root->node->children->node->type));
             }
 
 

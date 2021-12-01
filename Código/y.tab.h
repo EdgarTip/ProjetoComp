@@ -69,31 +69,31 @@ extern int yydebug;
     CMDARGS = 275,
     LSQ = 276,
     RSQ = 277,
-    NOT = 278,
-    ELSE = 279,
-    IF = 280,
-    FOR = 281,
-    END = 282,
-    PLUSPLUS = 283,
-    MINUSMINUS = 284,
-    ID = 285,
-    STRLIT = 286,
-    REALLIT = 287,
-    INTLIT = 288,
-    OR = 289,
-    AND = 290,
-    LT = 291,
-    GT = 292,
-    EQ = 293,
-    NE = 294,
-    LE = 295,
-    GE = 296,
-    ASSIGN = 297,
-    PLUS = 298,
-    MINUS = 299,
-    STAR = 300,
-    DIV = 301,
-    MOD = 302,
+    ELSE = 278,
+    IF = 279,
+    FOR = 280,
+    END = 281,
+    PLUSPLUS = 282,
+    MINUSMINUS = 283,
+    ID = 284,
+    STRLIT = 285,
+    REALLIT = 286,
+    INTLIT = 287,
+    OR = 288,
+    AND = 289,
+    LT = 290,
+    GT = 291,
+    EQ = 292,
+    NE = 293,
+    LE = 294,
+    GE = 295,
+    ASSIGN = 296,
+    PLUS = 297,
+    MINUS = 298,
+    STAR = 299,
+    DIV = 300,
+    MOD = 301,
+    NOT = 302,
     UNARY = 303
   };
 #endif
@@ -118,31 +118,31 @@ extern int yydebug;
 #define CMDARGS 275
 #define LSQ 276
 #define RSQ 277
-#define NOT 278
-#define ELSE 279
-#define IF 280
-#define FOR 281
-#define END 282
-#define PLUSPLUS 283
-#define MINUSMINUS 284
-#define ID 285
-#define STRLIT 286
-#define REALLIT 287
-#define INTLIT 288
-#define OR 289
-#define AND 290
-#define LT 291
-#define GT 292
-#define EQ 293
-#define NE 294
-#define LE 295
-#define GE 296
-#define ASSIGN 297
-#define PLUS 298
-#define MINUS 299
-#define STAR 300
-#define DIV 301
-#define MOD 302
+#define ELSE 278
+#define IF 279
+#define FOR 280
+#define END 281
+#define PLUSPLUS 282
+#define MINUSMINUS 283
+#define ID 284
+#define STRLIT 285
+#define REALLIT 286
+#define INTLIT 287
+#define OR 288
+#define AND 289
+#define LT 290
+#define GT 291
+#define EQ 292
+#define NE 293
+#define LE 294
+#define GE 295
+#define ASSIGN 296
+#define PLUS 297
+#define MINUS 298
+#define STAR 299
+#define DIV 300
+#define MOD 301
+#define NOT 302
 #define UNARY 303
 
 /* Value type.  */

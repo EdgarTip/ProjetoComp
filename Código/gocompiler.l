@@ -157,7 +157,7 @@ newLine                         ["\r\n""\n""\r"]
 "["                                         {if(check) printf("LSQ\n"); update_position(yyleng, 0); last = 0; if(check2)return LSQ;}
 "<"                                         {if(check) printf("LT\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return LT;}
 "%"                                         {if(check) printf("MOD\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return MOD;}
-"!"                                         {if(check) printf("NOT\n"); update_position(yyleng, 0); last = 0; if(check2)return NOT;}
+"!"                                         {if(check) printf("NOT\n"); update_position(yyleng, 0); last = 0; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return NOT;}
 "}"                                         {if(check) printf("RBRACE\n"); update_position(yyleng, 0); last = 1; if(check2)return RBRACE;}
 ")"                                         {if(check) printf("RPAR\n"); update_position(yyleng, 0); last = 1; if(check2)return RPAR;}
 "]"                                         {if(check) printf("RSQ\n"); update_position(yyleng, 0); last = 1; if(check2)return RSQ;}

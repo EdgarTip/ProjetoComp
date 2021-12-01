@@ -13,9 +13,9 @@
 
 %}
 
-%token PACKAGE SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT BLANKID  PARSEINT CMDARGS LSQ RSQ  NOT  ELSE IF FOR END PLUSPLUS MINUSMINUS
+%token PACKAGE SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT BLANKID  PARSEINT CMDARGS LSQ RSQ ELSE IF FOR END PLUSPLUS MINUSMINUS
 
-%token<id_token>ID STRLIT REALLIT INTLIT OR AND LT GT EQ NE LE GE ASSIGN PLUS MINUS STAR DIV MOD
+%token<id_token>ID STRLIT REALLIT INTLIT OR AND LT GT EQ NE LE GE ASSIGN PLUS MINUS STAR DIV MOD NOT
 
 %left COMMA
 %left ASSIGN
@@ -245,7 +245,7 @@ Expr: Expr OR Expr                                             {$$= create_node(
     |   Expr MOD Expr                                          {$$= create_node(OPERATOR, "Mod", num_line, num_column, $2); addChild($$,$1); addChild($$,$3); }
     |   MINUS Expr  %prec UNARY                                {$$= create_node(UNARYE, "Minus", num_line, num_column, NULL); addChild($$,$2);}
     |   PLUS  Expr  %prec UNARY                                {$$= create_node(UNARYE, "Plus", num_line, num_column, NULL); addChild($$,$2); }
-    |   NOT  Expr                                              {$$= create_node(NOTE, "Not", num_line, num_column, NULL); addChild($$,$2); }
+    |   NOT  Expr                                              {$$= create_node(NOTE, "Not", num_line, num_column, $1); addChild($$,$2); }
     |   INTLIT                                                 {$$ = create_node(INTLITE, 0, 0, 0, $1);}
     |   REALLIT                                                {$$ = create_node(REALLITE, 0, 0, 0, $1);}
     |   ID                                                     {$$ = create_node(IDE, 0, 0, 0, $1);}
