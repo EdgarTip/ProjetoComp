@@ -229,7 +229,10 @@ void printTree(tree_list list, int depth, int semantic){
     switch(list->node->class){
         case IDE:
         {
-            if(!semantic)printf("Id(%s)\n", list->node->token->symbol);
+            if(!semantic){
+                printf("Id(%s)\n", list->node->token->symbol);
+
+            }
             else{
                 if(list->node->token->first_param != NULL || (list->node->type != NULL && strcmp(list->node->type,"func") == 0 )){
                     printf("Id(%s) - (", list->node->token->symbol);
@@ -282,9 +285,25 @@ void printTree(tree_list list, int depth, int semantic){
             printf("Int\n");
             break;
         }
+        case CALL:
+        {
+            if(!semantic || strcmp(list->node->type,"none")==0){
+                printf("Call\n");
+            }
+            else{
+                char* string = lowerString(list->node->type);
+                printf("Call - %s\n", string);
+                free(string);
+            }
+            break;
+        }
         default:
         {
-            if(!semantic || list->node->type == NULL)printf("%s\n", list->node->token->symbol);
+
+            if(!semantic || list->node->type == NULL){
+
+                printf("%s\n", list->node->token->symbol);
+            }
             else{
                 char* string = lowerString(list->node->type);
                 printf("%s - %s\n", list->node->token->symbol, string);
@@ -378,7 +397,7 @@ void checkParams(tab root) {
 
         tab is_table= findTable(root_table, aux->value);
 
-        if(is_table==NULL && aux->is_used == 0 && strcmp(aux->value, "return")!=0) {
+        if(is_table==NULL && aux->is_used == 0 && strcmp(aux->value, "return")!=0 && strcmp(root->name,"global")!=0) {
             printf("Line %d, column %d: Symbol %s declared but never used\n", aux->line, aux->column, aux->value);
         }
         aux = aux->next;
@@ -512,14 +531,17 @@ tab createTable(elem_table table_element, int is_global){
 
 //Checks for variables in function body
 void funcBodyTable(tree_list root, tab table){
-
+    
     if(root == NULL) return;
 
     switch(root->node->class){
         case VARDEC:
         {
+            
             tree_list var_type = root->node->children;
             tree_list var_id = var_type->next;
+
+
             //Insert new value into current table
             if(!checkExists(table, var_id->node->token->symbol)){ 
                 
@@ -530,7 +552,10 @@ void funcBodyTable(tree_list root, tab table){
 
                 printf("Line %d, column %d: Symbol %s already defined\n", var_id->node->token->line, var_id->node->token->column, var_id->node->token->symbol);
             }
+            
             if(root->next != NULL){
+
+                
                 funcBodyTable(root->next, table);
             }
             break;
@@ -731,6 +756,7 @@ elem_table findElement(tab table, char *value){
 //Logic for the semantic tree inside a function
 void createAstAnotatedInsideFunc(tree_list root, tab table){
 
+
     if(root == NULL) return;
     
     if(root->next != NULL){
@@ -792,30 +818,38 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         //In this case we need to reset the type of the ID to null because we do not want declarated variables to show their type on the final tree
         case VARDEC:
         {
-            root->node->children->next->node->type = NULL;
-            elem_table elem = findElement(table, root->node->children->next->node->token->symbol);
-            elem->has_been_passed=1;
-            elem->is_used--;
 
+            root->node->children->next->node->type = NULL;
+
+            elem_table elem = findElement(table, root->node->children->next->node->token->symbol);
+            if(elem != NULL){
+                elem->has_been_passed=1;
+                elem->is_used--;    
+            }
+            
             break;
         }
         //We have to check if second child is type INTLIT and parse args gets type of first child
         case PARSEARGS:
         {   
             
-
-            if(root->node->children->next->node->class != INTLITE){
-                printf("Erro parse args invalido dentro parentises\n");            
+            char *string1 = lowerString(root->node->children->next->node->type);
+            char *string2 = lowerString(root->node->children->node->type);
+            if(strcmp(string1, "int") != 0){
+                printf("Line %d, column %d: Operator strconv.Atoi cannot be applied to types %s, %s\n",root->node->token->line, root->node->token->column,string2, string1 );            
                 root->node->type = "undef";
 
             }
-            if(strcmp(root->node->children->node->type, "int")!= 0){
-                printf("Erro parse args invalido la fora\n");
-
+            else if(strcmp(string2, "int")!= 0){
+                printf("Line %d, column %d: Operator strconv.Atoi cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,string2, string1);    
+                root->node->type = "undef";
             }
-            
-            root->node->type = "int";
-            
+            else{
+                root->node->type = "int";
+            }
+
+            free(string1);
+            free(string2);
             break;
         }
         // TODO HAVE INFINITE PARAMETERS (IN CASE FUNCTION HAS INFINITE PARAMETERS)
@@ -842,49 +876,83 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             //See if parameters piut in the function are correct and in the correct order
             
             tab table = findTable(root_table, function->node->token->symbol);
-
             if(table == NULL){
-                printf("ERRO tabela não exite\n");
+
+                printf("Line %d, column %d: Cannot find symbol %s(", root->node->children->node->token->line, root->node->children->node->token->column, root->node->children->node->token->symbol);
+
+                while(parameter != NULL){
+                    printf("%s", lowerString(parameter->node->type));
+                    parameter = parameter->next;
+                    if(parameter != NULL) printf(",");
+                }
+                printf(")\n");
                 return;
             }
 
  
             param func_params = table->first_param;
+            tree_list aux_params = parameter;
 
             while(func_params != NULL){
-                if(parameter == NULL){
+                if(aux_params == NULL){
 
-                    //printf("Line %d, column %d: Missing parameters\n", root->node->token->line, root->node->token->column);
+                    printf("Line %d, column %d: Cannot find symbol %s(", root->node->children->node->token->line, root->node->children->node->token->column, root->node->children->node->token->symbol);
+
+                    while(parameter != NULL){
+                        printf("%s", lowerString(parameter->node->type));
+                        parameter = parameter->next;
+                        if(parameter != NULL) printf(",");
+                    }
+                    
+                    printf(")\n");
                     root->node->type = "undef";
-                    root->node->children->node->type = "undef";
                     return;
                 }
-                char *string1 =lowerString(parameter->node->type);
+                
+                char *string1 =lowerString(aux_params->node->type);
                 char *string2 =lowerString(func_params->params);
                 
+                if(strcmp(string1,string2) != 0){
+                    printf("Line %d, column %d: Cannot find symbol %s(", root->node->children->node->token->line, root->node->children->node->token->column, root->node->children->node->token->symbol);
 
+                    while(parameter != NULL){
+                        printf("%s", lowerString(parameter->node->type));
+                        parameter = parameter->next;
+                        if(parameter != NULL) printf(",");
+                    }
+                    printf(")\n");
+                    root->node->type = "undef";
+                    return;
+                }
                
 
                 free(string1);
                 free(string2);
                 func_params = func_params->next;
-                parameter = parameter->next;
+                aux_params = aux_params->next;
 
             }
 
-            if(parameter != NULL){
-                printf("ERROR too many parameters\n");
-                root->node->type = "undef";
-                root->node->children->node->type = "undef";
-                return;
+            if(aux_params != NULL){
+                printf("Line %d, column %d: Cannot find symbol %s(", root->node->children->node->token->line, root->node->children->node->token->column, root->node->children->node->token->symbol);
+
+                    while(parameter != NULL){
+                        printf("%s", lowerString(parameter->node->type));
+                        parameter = parameter->next;
+                        if(parameter != NULL) printf(",");
+                    }
+                    
+                    printf(")\n");
+                    root->node->type = "undef";
+                    return;
             }
 
             //Creates the string in format "(value)"
          
 
-            if(strcmp(table->first_elem->type,"none")!=0){
-                root->node->type = table->first_elem->type;
-            }
+            
+            root->node->type = table->first_elem->type;
+            
 
  
             
@@ -903,8 +971,8 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
             else{
                 root->node->type = "undef";
-                printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
-                    root->node->token->symbol, lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                printf("Line %d, column %d: Operator = cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                    lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
             }
 
             free(string1);
@@ -920,31 +988,48 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             char* string1 = lowerString(child1->node->type);
             char* string2 = lowerString(child2->node->type);
 
-            if(strcmp(string1, string2) == 0){
+            if(strcmp(string1, string2) == 0 && (strcmp(string1, "int") == 0 || strcmp(string1, "float32") == 0 || strcmp(string1, "string") == 0)){
                 root->node->type = child2->node->type;
             }
             else{
                 root->node->type = "undef";
                 
-                if (strcmp(lowerString(root->node->token->symbol), "not") == 0) {
-                    printf("Line %d, column %d: Operator %s cannot be applied to type %s\n", root->node->token->line, root->node->token->column,\
-                    root->node->token->symbol, lowerString(root->node->children->node->type));
                 
-                } else {
-                    printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
-                    root->node->token->symbol, lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                
+               
+                if(strcmp(root->node->token->symbol, "Add") == 0){
+                    printf("Line %d, column %d: Operator + cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                        lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
                 }
-                    
-                
+                else if(strcmp(root->node->token->symbol, "Minus") == 0){
+                    printf("Line %d, column %d: Operator - cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                        lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else if(strcmp(root->node->token->symbol, "Mul") == 0){
+                    printf("Line %d, column %d: Operator * cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                        lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else if(strcmp(root->node->token->symbol, "Div") == 0){
+                    printf("Line %d, column %d: Operator / cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                        lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else if(strcmp(root->node->token->symbol, "Mod") == 0){
+                    printf("Line %d, column %d: Operator %% cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                        lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else{
+                    printf("Something went wrong\n");
+                }
             }
-
+                    
+            
             free(string1);
             free(string2);
             break;
         }
         case LOGICALOPERATOR:
         {
-             tree_list child1 = root->node->children;
+            tree_list child1 = root->node->children;
             tree_list child2 = child1->next;
 
             char* string1 = lowerString(child1->node->type);
@@ -954,68 +1039,118 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                 root->node->type = child2->node->type;
             } else {
                 root->node->type = "bool";
-
-                 printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
-                     root->node->token->symbol, lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                if(strcmp(root->node->token->symbol,"And")==0){
+                    printf("Line %d, column %d: Operator && cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else{
+                    printf("Line %d, column %d: Operator || cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
                 
             }
 
             break;
         }
 
-        case FORE:
-        {
-            int class_num = root->node->children->node->class;
-            if (class_num != OPERATOR && class_num != CONDITIONOPERATOR) {
-                printf("Line %d, column %d: Incompatible type %s in for statement\n", root->node->token->line, root->node->token->column, root->node->children->node->type);
-            }
-            
-            break;
-        }
 
+        case FORE:
         case IFE:
         {
-            int class_num = root->node->children->node->class;
-            if (class_num != OPERATOR && class_num != CONDITIONOPERATOR) {
-                printf("Line %d, column %d: Incompatible type %s in if statement\n", root->node->token->line, root->node->token->column, root->node->children->node->type);
+            char *string1 = lowerString(root->node->children->node->type);
+            
+            if (strcmp(string1, "bool" ) != 0) {
+                if(root->node->class == IFE){
+                    printf("Line %d, column %d: Incompatible type %s in if statement\n", root->node->children->node->token->line, root->node->children->node->token->column, root->node->children->node->type);
+                }
+                else{
+                    printf("Line %d, column %d: Incompatible type %s in for statement\n",root->node->children->node->token->line, root->node->children->node->token->column,root->node->children->node->type);
+                }
             }
+            free(string1);
 
             break;
         }
 
         case NOTE:
-        {
-            if(strcmp(root->node->children->node->type ,"Bool") == 0){
-                root->node->type = "Bool";
+        {   
+            char *string1 = lowerString(root->node->children->node->type);
+            if(strcmp(string1 ,"bool") == 0){
+                root->node->type = "bool";
             }
             else{
-                root->node->type = "undef";
-                printf("Line %d, column %d: Operator %s cannot be applied to type %s\n", root->node->token->line, root->node->token->column,\
-                    root->node->token->symbol, lowerString(root->node->children->node->type));
+                root->node->type = "bool";
+                printf("Line %d, column %d: Operator ! cannot be applied to type %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type));
             }
+            free(string1);
 
 
 
 
             break;
         }
-        case CONDITIONOPERATOR:
+        case CONDITIONOPERATOR1:
         {
             tree_list child1 = root->node->children;
 
             tree_list child2 = child1->next;
 
             if(strcmp(child1->node->type, child2->node->type) == 0){
-                root->node->type = "Bool";
+                root->node->type = "bool";
             }
             else{
-                printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
-                    root->node->token->symbol, lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                if(strcmp(root->node->token->symbol, "Eq")  == 0){
+                    printf("Line %d, column %d: Operator == cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else if(strcmp(root->node->token->symbol, "Ne")  == 0){
+                    printf("Line %d, column %d: Operator != cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                
 
                 
-                root->node->type = "undef";
+                root->node->type = "bool";
             }   
         
+            break;
+        }
+        case CONDITIONOPERATOR2:
+        {
+
+            tree_list child1 = root->node->children;
+            tree_list child2 = child1->next;
+
+            char *string1 = lowerString(child1->node->type);
+            char *string2 = lowerString(child2->node->type);
+
+            if(strcmp(string1, string2) == 0 && (strcmp(string1, "bool") != 0)){
+                root->node->type = "bool";
+            }
+            else{
+                if(strcmp(root->node->token->symbol, "Lt")  == 0){
+                    printf("Line %d, column %d: Operator < cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else if(strcmp(root->node->token->symbol, "Gt")  == 0){
+                    printf("Line %d, column %d: Operator > cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else if(strcmp(root->node->token->symbol, "Le")  == 0){
+                    printf("Line %d, column %d: Operator <= cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else if(strcmp(root->node->token->symbol, "Ge")  == 0){
+                    printf("Line %d, column %d: Operator >= cannot be applied to types %s, %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type), lowerString(root->node->children->next->node->type));
+                }
+                else{
+                    printf("Something went wrong\n");
+                }
+            }
+
+            root->node->type = "bool";
             break;
         }
         default:
@@ -1041,21 +1176,20 @@ void createAstAnotated( tree_list root, tab table){
 
             tab current_table = findTable(root_table, func_id->node->token->symbol);
 
-            if(current_table != NULL){
+            if(current_table != NULL && current_table->first_elem->has_been_passed == 0){
 
 
                 createAstAnotatedInsideFunc(func_head->next, current_table);
                 elem_table first_elem = current_table->first_elem;
 
-                while(first_elem != NULL){
-                    first_elem->has_been_passed=0;
-                    first_elem = first_elem->next;
-                }
+                first_elem->has_been_passed = 1;
 
                 
             }
             else{
-                printf("Line %d, column %d: Cannot find symbol %s()\n", func_id->node->token->line, func_id->node->token->column, func_id->node->token->symbol);
+                if(!checkExists(root_table, func_id->node->token->symbol)){
+                    printf("Line %d, column %d: Cannot find symbol %s()\n", func_id->node->token->line, func_id->node->token->column, func_id->node->token->symbol);
+                }
             }
 
             if(root->next != NULL){

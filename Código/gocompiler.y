@@ -13,9 +13,9 @@
 
 %}
 
-%token PACKAGE SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT BLANKID  PARSEINT CMDARGS LSQ RSQ ELSE IF FOR END PLUSPLUS MINUSMINUS
+%token PACKAGE SEMICOLON VAR LPAR RPAR COMMA INT FLOAT32 BOOL STRING FUNC LBRACE RBRACE RETURN PRINT BLANKID   CMDARGS LSQ RSQ ELSE END PLUSPLUS MINUSMINUS
 
-%token<id_token>ID STRLIT REALLIT INTLIT OR AND LT GT EQ NE LE GE ASSIGN PLUS MINUS STAR DIV MOD NOT
+%token<id_token>ID STRLIT REALLIT INTLIT OR AND LT GT EQ NE LE GE ASSIGN PLUS MINUS STAR DIV MOD NOT IF FOR PARSEINT
 
 %left COMMA
 %left ASSIGN
@@ -173,7 +173,7 @@ Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGNE, "Ass
                                                     $$= create_node(BLOCK, "Block", num_line, num_column, NULL);
                                                     addChild($$,$2);
                                                     } else{$$= $2;}}
-    | IF Expr LBRACE StatementSEMICOLON RBRACE ElseLBraceStatementRbraceOpc   {$$= create_node(IFE, "If", num_line, num_column, NULL); 
+    | IF Expr LBRACE StatementSEMICOLON RBRACE ElseLBraceStatementRbraceOpc   {$$= create_node(IFE, "If", num_line, num_column, $1); 
                                                                                 struct node_list *aux= create_node(BLOCK, "Block", num_line, num_column, NULL);
                                                                                 struct node_list *aux2= create_node(BLOCK, "Block", num_line, num_column, NULL);
                                                                                 addChild($$,$2); 
@@ -182,7 +182,7 @@ Statement: ID ASSIGN Expr                         {$$= create_node(ASSIGNE, "Ass
                                                                                 addChild(aux2,$6);
                                                                                 addChild($$,aux2);
                                                                                 }
-    | FOR ExprOpc LBRACE StatementSEMICOLON RBRACE {$$= create_node(FORE, "For", num_line, num_column, NULL); 
+    | FOR ExprOpc LBRACE StatementSEMICOLON RBRACE {$$= create_node(FORE, "For", num_line, num_column, $1); 
                                                     struct node_list *aux= create_node(BLOCK, "Block", num_line, num_column, NULL);
                                                     addChild($$,$2); 
                                                     addChild(aux, $4);
@@ -212,7 +212,7 @@ StatementSEMICOLON: Statement SEMICOLON StatementSEMICOLON {if($1 != NULL){$$=$1
     |                                                      {$$=NULL;}
 ;
 
-ParseArgs: ID COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR  {$$= create_node(PARSEARGS, "ParseArgs", num_line, num_column, $4); 
+ParseArgs: ID COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR  {$$= create_node(PARSEARGS, "ParseArgs", num_line, num_column, $5); 
                                                                             addChild($$,create_node(IDE, 0, 0, 0, $1)); 
                                                                             addChild($$,$9);}
     |   ID COMMA BLANKID ASSIGN PARSEINT LPAR error RPAR  {$$=NULL; error = 1;}
@@ -232,12 +232,12 @@ CommaExpr: COMMA Expr CommaExpr                                     {$$= $2; add
 
 Expr: Expr OR Expr                                             {$$= create_node(LOGICALOPERATOR, "Or", num_line, num_column, $2); addChild($$,$1); addChild($$,$3); }
     |   Expr AND Expr                                          {$$= create_node(LOGICALOPERATOR, "And", num_line, num_column, $2); addChild($$,$1); addChild($$,$3); }
-    |   Expr LT Expr                                           {$$= create_node(CONDITIONOPERATOR, "Lt", num_line, num_column, $2); addChild($$,$1); addChild($$,$3); }
-    |   Expr GT Expr                                           {$$= create_node(CONDITIONOPERATOR, "Gt", num_line, num_column, $2); addChild($$,$1); addChild($$,$3); }
-    |   Expr EQ Expr                                           {$$= create_node(CONDITIONOPERATOR, "Eq", num_line, num_column, $2); addChild($$,$1); addChild($$,$3); }
-    |   Expr NE Expr                                           {$$= create_node(CONDITIONOPERATOR, "Ne", num_line, num_column, $2); addChild($$,$1); addChild($$,$3);}
-    |   Expr LE Expr                                           {$$= create_node(CONDITIONOPERATOR, "Le", num_line, num_column, $2); addChild($$,$1); addChild($$,$3);}
-    |   Expr GE Expr                                           {$$= create_node(CONDITIONOPERATOR, "Ge", num_line, num_column, $2); addChild($$,$1); addChild($$,$3);}
+    |   Expr LT Expr                                           {$$= create_node(CONDITIONOPERATOR2, "Lt", num_line, num_column, $2); addChild($$,$1); addChild($$,$3); }
+    |   Expr GT Expr                                           {$$= create_node(CONDITIONOPERATOR2, "Gt", num_line, num_column, $2); addChild($$,$1); addChild($$,$3); }
+    |   Expr EQ Expr                                           {$$= create_node(CONDITIONOPERATOR1, "Eq", num_line, num_column, $2); addChild($$,$1); addChild($$,$3); }
+    |   Expr NE Expr                                           {$$= create_node(CONDITIONOPERATOR1, "Ne", num_line, num_column, $2); addChild($$,$1); addChild($$,$3);}
+    |   Expr LE Expr                                           {$$= create_node(CONDITIONOPERATOR2, "Le", num_line, num_column, $2); addChild($$,$1); addChild($$,$3);}
+    |   Expr GE Expr                                           {$$= create_node(CONDITIONOPERATOR2, "Ge", num_line, num_column, $2); addChild($$,$1); addChild($$,$3);}
     |   Expr PLUS Expr                                         {$$= create_node(OPERATOR, "Add", num_line, num_column, $2); addChild($$,$1); addChild($$,$3);}
     |   Expr MINUS Expr                                        {$$= create_node(OPERATOR, "Sub", num_line, num_column, $2); addChild($$,$1); addChild($$,$3);}
     |   Expr STAR Expr                                         {$$= create_node(OPERATOR, "Mul", num_line, num_column, $2); addChild($$,$1); addChild($$,$3);}
