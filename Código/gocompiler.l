@@ -9,6 +9,7 @@
     int num_column = 1;  
     int check = 0;
     int check2 = 0;
+    int check3 = 0;
     int last = 0;
     int initial_line = 0;
     int initial_column = 0;
@@ -250,9 +251,11 @@ int main(int argc, char* argv[])
                 case 'l':
                     check = 1;
                     break;
-                case 't':
+                 case 't':
+                    check2 = 1;
+                    break;
                 case 's':
-
+                    check3 = 1;
                     check2 = 1;
                     break;
 
@@ -261,27 +264,46 @@ int main(int argc, char* argv[])
         }
 
     }
-    if (check2) {
+    if (check3) {
         yyparse();
 
         if(!error){
-            //printTree(start_node,0, 0);  
-
             tab root_table = createAllTables(start_node);
-                          
-            //printTables(root_table); 
+                        
             createAstAnotated(start_node, root_table);
 
             checkParams(root_table);
-            //printTree(start_node,0, 1);  
-
+            printTables(root_table); 
+            printTree(start_node,0, 1);  
         }
         
+        freeTree(start_node);
+        check2 = 0;
+
+    } else if (check2) {
+        yyparse();
+
+        if(!error){
+            printTree(start_node,0, 0);  
+        }
         
         freeTree(start_node);
 
     } else if (check) {
          yylex();
+    } else {
+        check2 = 1;
+        yyparse();
+
+        if(!error){
+            tab root_table = createAllTables(start_node);
+                          
+            createAstAnotated(start_node, root_table);
+            checkParams(root_table);
+        }
+        
+        freeTree(start_node);
+        check2 = 0;
     }
 
     return 0;
