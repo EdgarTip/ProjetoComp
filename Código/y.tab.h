@@ -62,38 +62,38 @@ extern int yydebug;
     FUNC = 268,
     LBRACE = 269,
     RBRACE = 270,
-    RETURN = 271,
-    PRINT = 272,
-    BLANKID = 273,
-    CMDARGS = 274,
-    LSQ = 275,
-    RSQ = 276,
-    ELSE = 277,
-    END = 278,
-    PLUSPLUS = 279,
-    MINUSMINUS = 280,
-    ID = 281,
-    STRLIT = 282,
-    REALLIT = 283,
-    INTLIT = 284,
-    OR = 285,
-    AND = 286,
-    LT = 287,
-    GT = 288,
-    EQ = 289,
-    NE = 290,
-    LE = 291,
-    GE = 292,
-    ASSIGN = 293,
-    PLUS = 294,
-    MINUS = 295,
-    STAR = 296,
-    DIV = 297,
-    MOD = 298,
-    NOT = 299,
-    IF = 300,
-    FOR = 301,
-    PARSEINT = 302,
+    PRINT = 271,
+    BLANKID = 272,
+    CMDARGS = 273,
+    LSQ = 274,
+    RSQ = 275,
+    ELSE = 276,
+    END = 277,
+    PLUSPLUS = 278,
+    MINUSMINUS = 279,
+    ID = 280,
+    STRLIT = 281,
+    REALLIT = 282,
+    INTLIT = 283,
+    OR = 284,
+    AND = 285,
+    LT = 286,
+    GT = 287,
+    EQ = 288,
+    NE = 289,
+    LE = 290,
+    GE = 291,
+    ASSIGN = 292,
+    PLUS = 293,
+    MINUS = 294,
+    STAR = 295,
+    DIV = 296,
+    MOD = 297,
+    NOT = 298,
+    IF = 299,
+    FOR = 300,
+    PARSEINT = 301,
+    RETURN = 302,
     UNARY = 303
   };
 #endif
@@ -111,38 +111,38 @@ extern int yydebug;
 #define FUNC 268
 #define LBRACE 269
 #define RBRACE 270
-#define RETURN 271
-#define PRINT 272
-#define BLANKID 273
-#define CMDARGS 274
-#define LSQ 275
-#define RSQ 276
-#define ELSE 277
-#define END 278
-#define PLUSPLUS 279
-#define MINUSMINUS 280
-#define ID 281
-#define STRLIT 282
-#define REALLIT 283
-#define INTLIT 284
-#define OR 285
-#define AND 286
-#define LT 287
-#define GT 288
-#define EQ 289
-#define NE 290
-#define LE 291
-#define GE 292
-#define ASSIGN 293
-#define PLUS 294
-#define MINUS 295
-#define STAR 296
-#define DIV 297
-#define MOD 298
-#define NOT 299
-#define IF 300
-#define FOR 301
-#define PARSEINT 302
+#define PRINT 271
+#define BLANKID 272
+#define CMDARGS 273
+#define LSQ 274
+#define RSQ 275
+#define ELSE 276
+#define END 277
+#define PLUSPLUS 278
+#define MINUSMINUS 279
+#define ID 280
+#define STRLIT 281
+#define REALLIT 282
+#define INTLIT 283
+#define OR 284
+#define AND 285
+#define LT 286
+#define GT 287
+#define EQ 288
+#define NE 289
+#define LE 290
+#define GE 291
+#define ASSIGN 292
+#define PLUS 293
+#define MINUS 294
+#define STAR 295
+#define DIV 296
+#define MOD 297
+#define NOT 298
+#define IF 299
+#define FOR 300
+#define PARSEINT 301
+#define RETURN 302
 #define UNARY 303
 
 /* Value type.  */

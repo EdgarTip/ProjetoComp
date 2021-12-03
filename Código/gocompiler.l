@@ -102,17 +102,17 @@ newLine                         ["\r\n""\n""\r"]
 
 0[0-7]*(8|9)[0-9]*                   {printf("Line %d, column %d: invalid octal constant (%s)\n", num_line, num_column, yytext); update_position(yyleng, 0);}
 
-0                                           {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return INTLIT;}
-0*[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return INTLIT;}
-0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1;yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return INTLIT;}
-0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return INTLIT;}  
+0                                           {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return INTLIT;}
+0*[1-9]((_)?{numbers})*                       {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return INTLIT;}
+0[oO]?((_)?[0-7])*                          {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1;yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return INTLIT;}
+0[xX]((_)?{numbers_Hexa})+                  {if(check) printf("INTLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return INTLIT;}  
 
-[0-9]{nums_c}*{exp}{nums_c}                                      {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return REALLIT;}
-0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return REALLIT;}
-"."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return REALLIT;}
+[0-9]{nums_c}*{exp}{nums_c}                                      {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return REALLIT;}
+0*{nums_c}"."({numbers}*)?({exp}{nums_c})?                             {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return REALLIT;}
+"."{numbers}+({exp}{nums_c})?                                       {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return REALLIT;}
 
 
-0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), initial_line, initial_column); if(check2)return REALLIT;}   
+0[xX](({hexaNum}+("."{hexaN}*)?)|({hexaNum}*"."{hexaN}+))({expHexa}{nums_c})?                                    {if(check) printf("REALLIT(%s)\n", yytext); update_position(yyleng, 0); last = 1; yylval.id_token = create_token(strdup(yytext), last_num_line, last_num_column); if(check2)return REALLIT;}   
  
 
 
@@ -121,7 +121,7 @@ newLine                         ["\r\n""\n""\r"]
 "/""*"                                      {BEGIN COMMENT; initial_column = num_column; initial_line = num_line; update_position(yyleng, 0);}
 
 "package"                                   {if(check) printf("PACKAGE\n"); update_position(yyleng, 0); last = 0; if(check2)return PACKAGE;}
-"return"                                    {if(check) printf("RETURN\n"); update_position(yyleng, 0); last = 1; if(check2)return RETURN;}
+"return"                                    {if(check) printf("RETURN\n"); update_position(yyleng, 0); yylval.id_token = create_token("Return", last_num_line, last_num_column); last = 1; if(check2)return RETURN;}
 "else"                                      {if(check) printf("ELSE\n"); update_position(yyleng, 0); last = 0; if(check2)return ELSE;}
 "for"                                       {if(check) printf("FOR\n"); update_position(yyleng, 0); yylval.id_token = create_token("For", last_num_line, last_num_column); last = 0; if(check2)return FOR;}
 "if"                                        {if(check) printf("IF\n"); update_position(yyleng, 0); yylval.id_token = create_token("If", last_num_line, last_num_column); last = 0; if(check2)return IF;}
@@ -293,11 +293,11 @@ int main(int argc, char* argv[])
          yylex();
     } else {
         check2 = 1;
+
         yyparse();
 
         if(!error){
             tab root_table = createAllTables(start_node);
-                          
             createAstAnotated(start_node, root_table);
             checkParams(root_table);
         }

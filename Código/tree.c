@@ -16,7 +16,7 @@ id_token create_token(char *value, int line, int col) {
 }
 
 //Creates a new node
-tree_list create_node(enum class_name class, char *symbol, int line, int column, id_token tok){
+tree_list create_node(enum class_name class,int parent_is_call, char *symbol, int line, int column, id_token tok){
 
     tree_list list = (struct node_list *)malloc(sizeof(struct node_list));
 
@@ -57,6 +57,7 @@ tree_list create_node(enum class_name class, char *symbol, int line, int column,
     list->next = NULL;
     list->node->class = class;
     list->node->children = NULL;
+    list->node->parent_is_call = parent_is_call;
 
     return list;
 
@@ -144,7 +145,7 @@ void add_child_to_all(tree_list root, tree_list child){
 
     tree_list aux = root;
     while(aux != NULL){
-        tree_list aux2 = create_node(child->node->class, child->node->token->symbol, 0,0, NULL);
+        tree_list aux2 = create_node(child->node->class, 0, child->node->token->symbol, 0,0, NULL);
         addChildStart(aux, aux2);
         aux = aux->next;
 
@@ -243,6 +244,7 @@ void printTree(tree_list list, int depth, int semantic){
                     printf("Id(%s)\n", list->node->token->symbol);
                 }
                 else{
+                    if(strcmp(list->node->type,"temp") == 0) list->node->type = "undef";
                     char* string = lowerString(list->node->type);
                     printf("Id(%s) - %s\n", list->node->token->symbol, string);
                     free(string);
@@ -489,6 +491,7 @@ elem_table createElem(char *value,  char *type, param parameter, int is_param, i
     elem->is_param = is_param;
     elem->next = NULL;
     elem->has_been_passed = 0;
+
   
     return elem;
 }
@@ -583,6 +586,7 @@ void funcBodyTable(tree_list root, tab table){
 //Creates all tables and anotaded tree (in function body)
 tab createAllTables(tree_list root){
     
+
     tab current_table = NULL;
     
     if(root == NULL){
@@ -782,8 +786,16 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             
             //Its a table
             if(aux != NULL){
-                root->node->token->first_param = aux->first_param;
-                root->node->type = "func";
+                
+                if(root->node->parent_is_call){
+                    root->node->token->first_param = aux->first_param;
+                    root->node->type = "func";
+                }
+                else{
+                    printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
+                    root->node->type  = "undef";
+                }
+                
             }
 
             else{
@@ -792,7 +804,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                 elem_table elem = findElement(table, root->node->token->symbol);
 
                 if(elem == NULL){
-                    printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
+                    if(!root->node->parent_is_call) printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
                     root->node->type = "undef";
                 }
                 else{
@@ -852,6 +864,14 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             free(string2);
             break;
         }
+        case PRINTE:
+        {   
+
+            if(root->node->children->node->type != NULL && strcmp(root->node->children->node->type, "undef")==0){
+                printf("Line %d, column %d: Incompatible type undef in fmt.Println statement\n",root->node->children->node->children->node->token->line, root->node->children->node->children->node->token->column);
+            } 
+            break;
+        }
         // TODO HAVE INFINITE PARAMETERS (IN CASE FUNCTION HAS INFINITE PARAMETERS)
         case UNARYE:
         {  
@@ -868,7 +888,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         }
         case CALL:
         {
-            
+
             tree_list function = root->node->children;
             tree_list parameter = function->next; 
 
@@ -886,6 +906,8 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                     if(parameter != NULL) printf(",");
                 }
                 printf(")\n");
+                function->node->type = "undef";
+                root->node->type = "undef";
                 return;
             }
 
@@ -905,6 +927,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                     }
                     
                     printf(")\n");
+                    function->node->type = "undef";
                     root->node->type = "undef";
                     return;
                 }
@@ -921,6 +944,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                         if(parameter != NULL) printf(",");
                     }
                     printf(")\n");
+                    function->node->type = "undef";
                     root->node->type = "undef";
                     return;
                 }
@@ -943,6 +967,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                     }
                     
                     printf(")\n");
+                    function->node->type = "undef";
                     root->node->type = "undef";
                     return;
             }
@@ -952,7 +977,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
 
             
             root->node->type = table->first_elem->type;
-            
+            function->node->type = "func";
 
  
             
@@ -960,13 +985,15 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         }
         case ASSIGNE:
         {
+
             tree_list child_left = root->node->children;
             tree_list child_right = child_left->next;
 
             char *string1 = lowerString(child_right->node->type);
             char *string2 = lowerString(child_left->node->type);
 
-            if(strcmp(string1, string2) == 0){
+
+            if(strcmp(string1, string2) == 0 && strcmp(string1, "undef") != 0){
                 root->node->type = child_left->node->type;  
             }
             else{
@@ -1057,14 +1084,18 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         case FORE:
         case IFE:
         {
+            if(strcmp(root->node->children->node->token->symbol,"Block")==0){
+                root->node->type = "bool";
+                return;
+            }
             char *string1 = lowerString(root->node->children->node->type);
             
             if (strcmp(string1, "bool" ) != 0) {
                 if(root->node->class == IFE){
-                    printf("Line %d, column %d: Incompatible type %s in if statement\n", root->node->children->node->token->line, root->node->children->node->token->column, root->node->children->node->type);
+                    printf("Line %d, column %d: Incompatible type %s in if statement\n", root->node->children->node->token->line, root->node->children->node->token->column, lowerString(root->node->children->node->type));
                 }
                 else{
-                    printf("Line %d, column %d: Incompatible type %s in for statement\n",root->node->children->node->token->line, root->node->children->node->token->column,root->node->children->node->type);
+                    printf("Line %d, column %d: Incompatible type %s in for statement\n",root->node->children->node->token->line, root->node->children->node->token->column,lowerString(root->node->children->node->type));
                 }
             }
             free(string1);
@@ -1151,6 +1182,20 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
 
             root->node->type = "bool";
+            break;
+        }
+        case RETURNE:
+        {   
+            if(root->node->children == NULL){
+                if(strcmp(table->first_elem->type, "none") != 0){
+                    printf("Line %d, column %d: Incompatible type %s in return statement\n", root->node->token->line, root->node->token->column, root->node->children->node->type);
+                } 
+            }
+            else{
+                if(strcmp(table->first_elem->type, root->node->children->node->type)!=0){
+                    printf("Line %d, column %d: Incompatible type %s in return statement\n", root->node->children->node->token->line, root->node->children->node->token->column, root->node->children->node->type);
+                }
+            }
             break;
         }
         default:

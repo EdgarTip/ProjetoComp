@@ -28,6 +28,7 @@ struct node{
     char *type;
     struct token *token;
     struct node_list *children;
+    int parent_is_call;
 };
 
 struct node_list{
@@ -47,8 +48,8 @@ struct element_table{
     int is_param;
     char is_used;
     int has_been_passed; 
-    int line;  // may be unused
-    int column;   // may be unused
+    int line;  
+    int column;   
 
     param first_param;
     elem_table next;
@@ -61,7 +62,7 @@ struct table{
     elem_table first_elem;
 };
 
-tree_list create_node(enum class_name class, char *symbol, int line, int column, id_token tok );
+tree_list create_node(enum class_name class,int parent_is_call, char *symbol, int line, int column, id_token tok);
 id_token create_token(char *value, int  line, int column);
 void addChild(tree_list root, tree_list new_child);
 void freeTree(tree_list root);
