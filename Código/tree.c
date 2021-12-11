@@ -209,7 +209,7 @@ char * lowerString(char *string){
 
 void printParams(param params){
     param aux2 = params;
-
+    
     while( aux2 != NULL){
 
         char *lower = lowerString(aux2->params);
@@ -218,6 +218,24 @@ void printParams(param params){
         
         free(lower);
         aux2 = aux2->next;
+    }
+    return;
+}
+
+void printParamsWithAssembly(tab table, param params){
+
+    param aux2 = params;
+    
+    elem_table aux = table->first_elem->next;
+    
+
+    while( aux2 != NULL){
+
+        table->current_index_variables++;
+        printf("i32 %%%d",table->current_index_variables);
+        aux->variable_value = table->current_index_variables; 
+        aux2 = aux2->next;
+        aux = aux->next;
     }
     return;
 }
@@ -244,7 +262,6 @@ void printTree(tree_list list, int depth, int semantic){
                     printf("Id(%s)\n", list->node->token->symbol);
                 }
                 else{
-                    if(strcmp(list->node->type,"temp") == 0) list->node->type = "undef";
                     char* string = lowerString(list->node->type);
                     printf("Id(%s) - %s\n", list->node->token->symbol, string);
                     free(string);
@@ -491,6 +508,7 @@ elem_table createElem(char *value,  char *type, param parameter, int is_param, i
     elem->is_param = is_param;
     elem->next = NULL;
     elem->has_been_passed = 0;
+    elem->variable_value = 0;
 
   
     return elem;
@@ -508,6 +526,7 @@ tab createTable(elem_table table_element, int is_global){
 
         new_table->first_param = table_element->first_param;
         new_table->name = table_element->value;
+        new_table->current_index_variables=0;
     }
 
     //If there is still no root table
@@ -516,6 +535,7 @@ tab createTable(elem_table table_element, int is_global){
         new_table->first_elem = NULL;
         new_table->first_param = NULL;
         new_table->next = NULL; 
+        new_table->current_index_variables=0;
         root_table = new_table;
         return root_table;
     }
@@ -758,18 +778,18 @@ elem_table findElement(tab table, char *value){
 
 
 //Logic for the semantic tree inside a function
-void createAstAnotatedInsideFunc(tree_list root, tab table){
+void createAstAnotatedInsideFunc(tree_list root, tab table, int error){
 
 
     if(root == NULL) return;
     
     if(root->next != NULL){
-        createAstAnotatedInsideFunc(root->next, table);
+        createAstAnotatedInsideFunc(root->next, table, error);
     }
 
     
     if(root->node->children != NULL){
-        createAstAnotatedInsideFunc(root->node->children, table);
+        createAstAnotatedInsideFunc(root->node->children, table, error);
     } 
 
     switch(root->node->class){
@@ -804,7 +824,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
                 elem_table elem = findElement(table, root->node->token->symbol);
 
                 if(elem == NULL){
-                    if(!root->node->parent_is_call) printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
+                    if(!root->node->parent_is_call && error) printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
                     root->node->type = "undef";
                 }
                 else{
@@ -847,7 +867,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             
             char *string1 = lowerString(root->node->children->next->node->type);
             char *string2 = lowerString(root->node->children->node->type);
-            if(strcmp(string1, "int") != 0){
+            if(strcmp(string1, "int") != 0 ){
                 printf("Line %d, column %d: Operator strconv.Atoi cannot be applied to types %s, %s\n",root->node->token->line, root->node->token->column,string2, string1 );            
                 root->node->type = "undef";
 
@@ -872,7 +892,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             } 
             break;
         }
-        
+
         // TODO HAVE INFINITE PARAMETERS (IN CASE FUNCTION HAS INFINITE PARAMETERS)
         case UNARYE:
         {  
@@ -882,7 +902,15 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
             }
             else{
                 root->node->type = "undef";
-                printf("Erro unario\n");
+                if(strcmp(root->node->token->symbol, "Minus") == 0){
+                    printf("Line %d, column %d: Operator - cannot be applied to type %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type));
+                }
+                else{
+                    printf("Line %d, column %d: Operator + cannot be applied to type %s\n", root->node->token->line, root->node->token->column,\
+                     lowerString(root->node->children->node->type));
+                }
+                
             }
             free(string1);
             break;
@@ -1188,13 +1216,13 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
         case RETURNE:
         {   
             if(root->node->children == NULL){
-                if(strcmp(table->first_elem->type, "none") != 0){
-                    printf("Line %d, column %d: Incompatible type %s in return statement\n", root->node->token->line, root->node->token->column, root->node->children->node->type);
+                if(strcmp(table->first_elem->type, "none") != 0 && error){
+                    printf("Line %d, column %d: Incompatible type %s in return statement\n", root->node->token->line, root->node->token->column, lowerString(root->node->children->node->type));
                 } 
             }
             else{
-                if(strcmp(table->first_elem->type, root->node->children->node->type)!=0){
-                    printf("Line %d, column %d: Incompatible type %s in return statement\n", root->node->children->node->token->line, root->node->children->node->token->column, root->node->children->node->type);
+                if(strcmp(table->first_elem->type, root->node->children->node->type)!=0 && error){
+                    printf("Line %d, column %d: Incompatible type %s in return statement\n", root->node->children->node->token->line, root->node->children->node->token->column, lowerString(root->node->children->node->type));
                 }
             }
             break;
@@ -1212,7 +1240,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table){
 }
 
 
-void createAstAnotated( tree_list root, tab table){
+void createAstAnotated( tree_list root, tab table, int error){
     if(root == NULL) return;
     switch(root->node->class){
         case FUNCDECL:
@@ -1225,7 +1253,7 @@ void createAstAnotated( tree_list root, tab table){
             if(current_table != NULL && current_table->first_elem->has_been_passed == 0){
 
 
-                createAstAnotatedInsideFunc(func_head->next, current_table);
+                createAstAnotatedInsideFunc(func_head->next, current_table, error);
                 elem_table first_elem = current_table->first_elem;
 
                 first_elem->has_been_passed = 1;
@@ -1240,7 +1268,7 @@ void createAstAnotated( tree_list root, tab table){
 
             if(root->next != NULL){
 
-                createAstAnotated(root->next, root_table);
+                createAstAnotated(root->next, root_table, error);
             } 
             break;
         }
@@ -1251,12 +1279,12 @@ void createAstAnotated( tree_list root, tab table){
         {   
             
             if(root->node->children != NULL){
-                createAstAnotated(root->node->children, root_table); 
+                createAstAnotated(root->node->children, root_table, error); 
                 
             }
 
             if(root->next != NULL){
-                createAstAnotated(root->next, root_table);
+                createAstAnotated(root->next, root_table, error);
             }
             
         }
@@ -1265,5 +1293,96 @@ void createAstAnotated( tree_list root, tab table){
     return;
 
 
+}
+
+
+
+void createAssemblyInsideFunc(tree_list root, tab current_table){
+
+    if(root == NULL) return;
+    switch(root->node->class){
+        case RETURNE:
+        {   
+            if(strcmp(current_table->first_elem->type, "none") == 0){
+                printf("ret void\n");
+            }
+            else{
+                elem_table aux = findElement(current_table, root->node->children->node->token->symbol);
+                if(aux == NULL){
+                    printf("ret i32 %s\n", root->node->children->node->token->symbol);
+                }
+                else{
+                    printf("ret i32 %d\n", aux->variable_value);
+                }
+                
+            }
+            
+        }
+        default:
+        {
+
+        }
+        
+
+    }
+
+    if(root->node->children != NULL){
+        createAssemblyInsideFunc(root->node->children, current_table);          
+    }
+
+    if(root->next != NULL){
+        createAssemblyInsideFunc(root->next, current_table);
+    }
+
+
+
+}
+
+
+
+
+
+void createAssembly(tree_list root){
+
+    
+    if(root == NULL) return;
+    switch(root->node->class){
+        case FUNCDECL:
+        {
+            tree_list func_head = root->node->children;
+            tree_list func_id  = func_head->node->children;
+
+            tab current_table = findTable(root_table, func_id->node->token->symbol);
+
+
+
+            printf("define dso_local i32 @%s(",func_id->node->token->symbol);
+
+            printParamsWithAssembly(current_table, current_table->first_param);
+
+            printf("){\n");
+            
+            createAssemblyInsideFunc(root->next, current_table);
+
+            printf("}\n");
+        }
+
+
+        default:
+        {   
+            
+            if(root->node->children != NULL){
+                createAssemblyInsideFunc(root->node->children, root_table); 
+                
+            }
+
+            if(root->next != NULL){
+                createAssemblyInsideFunc(root->next, root_table);
+            }
+            
+        }
+    }
+
+    return;
 }
 

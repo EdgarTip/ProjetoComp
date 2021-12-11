@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
         if(!error){
             tab root_table = createAllTables(start_node);
                         
-            createAstAnotated(start_node, root_table);
+            createAstAnotated(start_node, root_table, 0);
 
             checkParams(root_table);
             printTables(root_table); 
@@ -293,12 +293,11 @@ int main(int argc, char* argv[])
          yylex();
     } else {
         check2 = 1;
-
         yyparse();
 
         if(!error){
             tab root_table = createAllTables(start_node);
-            createAstAnotated(start_node, root_table);
+            createAstAnotated(start_node, root_table, 1);
             checkParams(root_table);
         }
         

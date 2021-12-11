@@ -50,6 +50,7 @@ struct element_table{
     int has_been_passed; 
     int line;  
     int column;   
+    int variable_value;
 
     param first_param;
     elem_table next;
@@ -57,6 +58,7 @@ struct element_table{
 
 struct table{
     char *name;
+    int current_index_variables;
     param first_param;
     tab next;
     elem_table first_elem;
@@ -74,4 +76,5 @@ void add_child_to_all(tree_list root, tree_list child);
 tab createAllTables(tree_list root);
 void checkParams(tab root);
 void printTables(tab root);
-void createAstAnotated( tree_list root, tab table);
+void createAstAnotated( tree_list root, tab table, int error);
+void createAssembly(tree_list root);
