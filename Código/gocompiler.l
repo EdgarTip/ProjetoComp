@@ -230,6 +230,7 @@ newLine                         ["\r\n""\n""\r"]
 %%
 
 void yyerror ( char *s) { 
+    error = 1;
     if (strcmp(yytext, "\"") == 0) {
         // syntax error: "
         printf ("Line %d, column %d: %s: \"%s\"\n", initial_line, initial_column, s, yylval.id_token->symbol);
@@ -299,6 +300,13 @@ int main(int argc, char* argv[])
             tab root_table = createAllTables(start_node);
             createAstAnotated(start_node, root_table, 1);
             checkParams(root_table);
+            
+            string_glob root_strings = globalStrings(start_node, NULL, 1);
+            printStrings(root_strings);
+            printGlobals(root_table);
+            createAssembly(start_node, root_strings);
+
+
         }
         
         freeTree(start_node);

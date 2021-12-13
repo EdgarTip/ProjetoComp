@@ -4,7 +4,7 @@
     #include "tree.h"
     int yylex(void);
     void yyerror (const char *s);
-    char error = 0;
+    int error = 0;
     extern int check2;
 
     tree_list start_node;

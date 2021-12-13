@@ -3,6 +3,8 @@
 #include <ctype.h>
 
 tab root_table = NULL;
+int first_time_int = 1;
+int first_time_float = 1;
 //--Tree--
 
 //Creates a token
@@ -228,12 +230,12 @@ void printParamsWithAssembly(tab table, param params){
     
     elem_table aux = table->first_elem->next;
     
-
+    int counter = 0;
     while( aux2 != NULL){
 
-        table->current_index_variables++;
-        printf("i32 %%%d",table->current_index_variables);
-        aux->variable_value = table->current_index_variables; 
+        printf("i32 %%%c",(char)((int)'a'+counter));
+        aux->variable_value = (char)((int)'a'+counter); 
+        counter++;
         aux2 = aux2->next;
         aux = aux->next;
     }
@@ -509,6 +511,8 @@ elem_table createElem(char *value,  char *type, param parameter, int is_param, i
     elem->next = NULL;
     elem->has_been_passed = 0;
     elem->variable_value = 0;
+    elem->was_used_assembly = 0;
+    elem->previous_variable_value = 0;
 
   
     return elem;
@@ -752,12 +756,13 @@ tab createAllTables(tree_list root){
 
 //Checks if there is a element either in the current function table or the global table. Returns type
 //TODO: VER SE TEM 2 REPETIDOS
-elem_table findElement(tab table, char *value){
+elem_table findElement(tab table, char *value, int assembly){
     
     //See if variable is in local table
     elem_table aux1 = table->first_elem;
     while(aux1 != NULL){
-        if(strcmp(aux1->value, value) == 0 && !aux1->has_been_passed){
+
+        if(strcmp(aux1->value, value) == 0 && (assembly || !aux1->has_been_passed)){
             return aux1;
         }
 
@@ -821,7 +826,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table, int error){
             else{
 
                 //Sees if element exists and if it does then gets the type as a return parameter. If it receives no value it means it does not exist
-                elem_table elem = findElement(table, root->node->token->symbol);
+                elem_table elem = findElement(table, root->node->token->symbol, 0);
 
                 if(elem == NULL){
                     if(!root->node->parent_is_call && error) printf("Line %d, column %d: Cannot find symbol %s\n", root->node->token->line, root->node->token->column, root->node->token->symbol);
@@ -853,7 +858,7 @@ void createAstAnotatedInsideFunc(tree_list root, tab table, int error){
 
             root->node->children->next->node->type = NULL;
 
-            elem_table elem = findElement(table, root->node->children->next->node->token->symbol);
+            elem_table elem = findElement(table, root->node->children->next->node->token->symbol, 0);
             if(elem != NULL){
                 elem->has_been_passed=1;
                 elem->is_used--;    
@@ -1295,43 +1300,226 @@ void createAstAnotated( tree_list root, tab table, int error){
 
 }
 
+string_glob findStringElem(string_glob root, char* value){
+    string_glob aux = root;
 
+    while(aux != NULL){
+        if(strcmp(aux->node->token->symbol, value) == 0){
+            return aux;
+        }
+        aux = aux->next;
+    }
 
-void createAssemblyInsideFunc(tree_list root, tab current_table){
+    return NULL;
+}
+
+void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob string_root, int after_assign){
 
     if(root == NULL) return;
     switch(root->node->class){
+        case VARDEC:
+        {
+
+            tree_list child = root->node->children->next;
+            elem_table elem = findElement(current_table, child->node->token->symbol, 1);
+
+            if(elem != NULL){
+                elem->variable_value = 49 + current_table->current_index_variables;
+                current_table->current_index_variables++;
+            }
+            else{
+                printf("BUG!\n");
+            }
+            after_assign = 0;
+            break;
+        }
+
+        case PRINTE:
+        {
+            switch(root->node->children->node->class){
+                case STRINGE:
+                {
+                    string_glob string_elem = findStringElem(string_root, root->node->children->node->token->symbol);
+                    if(string_elem != NULL){
+                        current_table->current_index_variables++;
+                        printf("%%%d = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%ld x i8], [%ld x i8]* @.str.%d, i32 0, i32 0))\n", current_table->current_index_variables, strlen(string_elem->node->token->symbol) +2,strlen(string_elem->node->token->symbol) +2,string_elem->value);
+                        
+                    }
+                    else{
+                        printf("BUG\n");
+                    }
+                    break;
+                }
+                case INTLITE:
+                {
+                        
+                    current_table->current_index_variables++;
+                    printf("%%%d = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.1, i32 0, i32 0), i32 %s)\n", current_table->current_index_variables , root->node->children->node->token->symbol);
+                        break;
+                }
+                case REALLITE:
+                {
+                    
+                    current_table->current_index_variables++;
+                    printf("%%%d = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.2, i32 0, i32 0), double %.8s)\n", current_table->current_index_variables , root->node->children->node->token->symbol);
+                    break;
+                }
+                case IDE:
+                {
+                    tree_list child = root->node->children;
+
+                    if(strcmp(lowerString(child->node->type), "float32") == 0){
+
+                        elem_table table_elem = findElement(current_table, child->node->token->symbol, 1);
+                        current_table->current_index_variables++;
+                        printf("%%%d = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.2, i32 0, i32 0), double %%%c)\n", current_table->current_index_variables, table_elem->variable_value);
+                    }
+                    else if(strcmp(lowerString(child->node->type), "int") == 0){
+                        elem_table table_elem = findElement(current_table, child->node->token->symbol, 1);
+                        current_table->current_index_variables++;
+                        printf("%%%d = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.1, i32 0, i32 0), i32 %%%c)\n", current_table->current_index_variables, table_elem->variable_value);
+                    }
+                    else if(strcmp(lowerString(child->node->type), "bool") == 0){
+
+                    }
+                    else if(strcmp(lowerString(child->node->type), "string") == 0){
+
+                    }
+                    else{
+                        printf("NODE %s\n", lowerString(child->node->type));
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            after_assign = 0;
+            break;
+        }
+
         case RETURNE:
         {   
             if(strcmp(current_table->first_elem->type, "none") == 0){
                 printf("ret void\n");
             }
             else{
-                elem_table aux = findElement(current_table, root->node->children->node->token->symbol);
+                elem_table aux = findElement(current_table, root->node->children->node->token->symbol, 1);
                 if(aux == NULL){
                     printf("ret i32 %s\n", root->node->children->node->token->symbol);
                 }
                 else{
-                    printf("ret i32 %d\n", aux->variable_value);
+                    printf("ret i32 %%%c\n", (char)(aux->variable_value));
                 }
                 
+                
+            }
+            after_assign = 0;
+            break;
+        }
+        case ASSIGNE:
+        {
+            tree_list id = root->node->children;
+
+            elem_table elem = findElement(current_table, id->node->token->symbol, 1);
+            
+            if(!elem->was_used_assembly){
+                printf("%%%c = ",(char)elem->variable_value);
+                elem->was_used_assembly = 1;
+            }
+            else{
+                elem->previous_variable_value = elem->variable_value;
+                elem->variable_value = 49 + current_table->current_index_variables;
+                printf("%%%c = ",(char)elem->variable_value);
+                current_table->current_index_variables++;
             }
             
+            after_assign = 1;
+            break;
+        }
+        case INTLITE:
+        {
+            if(after_assign ){
+                printf(" add i32 0, %s\n", root->node->token->symbol);
+            }
+            after_assign = 0;
+            break;
+        }
+        case IDE: 
+        {
+            if(after_assign ){
+                elem_table elem = findElement(current_table, root->node->token->symbol, 1);
+
+                if(elem->previous_variable_value == 0){
+                    printf("add i32 0, %s\n", elem->variable_value);
+                }
+                else{
+                    printf("add i32 0, %s\n", elem->previous_variable_value);
+                    elem->previous_variable_value = 0;
+                }
+            }
+            break;
+        }
+        case OPERATOR:
+        {
+            tree_list child1 = root->node->children;
+            tree_list child2 = child1->next;
+
+            if(strcmp(root->node->token->symbol, "Add") == 0){
+                printf("add i32 ");
+
+            }
+            else if(strcmp(root->node->token->symbol, "Minus") == 0){
+                printf("sub i32 ");
+            }
+            else if(strcmp(root->node->token->symbol, "Mul") == 0){
+                printf("mul i32 ");
+            }
+            else if(strcmp(root->node->token->symbol, "Div") == 0){
+                printf("div i32 ");
+                }
+            else if(strcmp(root->node->token->symbol, "Mod") == 0){
+                printf("mod i32 ");
+            }
+            
+
+            elem_table elem1 = findElement(current_table, child1->node->token->symbol, 1);
+
+            if(elem1 == NULL){
+                printf("%s,", child1->node->token->symbol);
+            }
+            else{
+                printf("%%%c, ",(char)(elem1->variable_value));
+            }
+
+            elem_table elem2 = findElement(current_table, child2->node->token->symbol, 1);
+
+            if(elem2 == NULL){
+                printf("%s\n", child2->node->token->symbol);
+            }
+            else{
+                printf("%%%c\n",elem2->variable_value);
+            }
+
+            
+            after_assign = 0;    
+            break;
         }
         default:
         {
-
+            break;
         }
         
 
     }
 
     if(root->node->children != NULL){
-        createAssemblyInsideFunc(root->node->children, current_table);          
+        createAssemblyInsideFunc(root->node->children, current_table, string_root,after_assign);          
     }
 
     if(root->next != NULL){
-        createAssemblyInsideFunc(root->next, current_table);
+        createAssemblyInsideFunc(root->next, current_table, string_root,after_assign);
     }
 
 
@@ -1342,7 +1530,7 @@ void createAssemblyInsideFunc(tree_list root, tab current_table){
 
 
 
-void createAssembly(tree_list root){
+void createAssembly(tree_list root, string_glob string_root){
 
     
     if(root == NULL) return;
@@ -1357,14 +1545,19 @@ void createAssembly(tree_list root){
 
 
             printf("define dso_local i32 @%s(",func_id->node->token->symbol);
-
             printParamsWithAssembly(current_table, current_table->first_param);
 
             printf("){\n");
             
-            createAssemblyInsideFunc(root->next, current_table);
+            createAssemblyInsideFunc(func_head->next, current_table, string_root, 0);
 
             printf("}\n");
+
+            if(root->next != NULL){
+
+                createAssembly(root->next, string_root);
+            } 
+            break;
         }
 
 
@@ -1372,12 +1565,12 @@ void createAssembly(tree_list root){
         {   
             
             if(root->node->children != NULL){
-                createAssemblyInsideFunc(root->node->children, root_table); 
+                createAssembly(root->node->children, string_root); 
                 
             }
 
             if(root->next != NULL){
-                createAssemblyInsideFunc(root->next, root_table);
+                createAssembly(root->next, string_root);
             }
             
         }
@@ -1385,4 +1578,81 @@ void createAssembly(tree_list root){
 
     return;
 }
+
+void printStrings(string_glob string_list_root){
+    string_glob aux = string_list_root;
+    while(aux != NULL){
+        printf("@.str.%d = private unnamed_addr constant [ %lu x i8] c\"%s\\0A\\00\", align 1\n",aux->value, strlen(aux->node->token->symbol) +2 , aux->node->token->symbol);
+        aux = aux->next;
+    }
+}
+
+void printGlobals(tab global_table){
+    elem_table aux = global_table->first_elem;
+
+    while(aux != NULL){
+        if(!aux->is_param && findTable(global_table, aux->value) == NULL){
+            printf("@%s = common dso_local global i32 0, align 4\n", aux->value);
+        }
+        aux = aux->next;
+    }
+}
+string_glob globalStrings(tree_list root, string_glob string_list_root, int first_time){
+
+        if(root == NULL) return string_list_root;
+
+        if(root->node->class == STRLITE){
+            string_glob string_element = (struct string_list *) malloc(sizeof(struct string_list));
+
+            string_element->next = NULL;
+            string_element->node = root->node;
+
+            if(string_list_root == NULL){
+                string_element->value = 3;
+                string_list_root = string_element;
+                
+
+            }
+            
+            else{
+                string_glob aux = string_list_root;
+                int counter = 4;
+
+                while(aux->next != NULL){
+                    aux = aux->next;
+                    counter++;
+                }
+
+                string_element->value = counter;
+                aux->next = string_element;
+            }
+        }
+        else if(root->node->class == PRINTE){
+            if(first_time){
+                printf("declare dso_local i32 @printf(i8*, ...) #1\n");
+                first_time = 0;
+                
+            }
+            
+            if(first_time_int){
+                first_time_int = 0;
+                printf("@.str.1 = private unnamed_addr constant [4 x i8] c\"%%d\\0A\\00\", align 1\n");
+            }
+            else if(first_time_float){  
+                first_time_float = 0;
+                printf("@.str.2 = private unnamed_addr constant [7 x i8] c\"%%.08f\\0A\\00\", align 1\n");
+            }
+        }
+        if(root->node->children != NULL){
+            string_list_root = globalStrings(root->node->children, string_list_root, first_time);        
+        }
+        if(root->next != NULL){
+            string_list_root = globalStrings(root->next, string_list_root, first_time);
+        }    
+
+        return string_list_root;
+}
+
+
+
 

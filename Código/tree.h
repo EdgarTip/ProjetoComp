@@ -11,6 +11,7 @@ typedef struct token *id_token;
 typedef struct element_table *elem_table;
 typedef struct table *tab;
 typedef struct parameter *param;
+typedef struct string_list *string_glob;
 
 enum class_name{PROGRAM, IDE, DECLARATION, VARDEC, VARSPEC, INTE, FLOAT32E, BOOLE, STRINGE, FUNCDECL, PARAMETERS, INTLITE, FUNCBODY, VARSANDSTAT, VARSANDSTATOPC, STATEMENT, STATESEMI, PARSEARGS, FUNCINVOCATION, REALLITE, STRLITE, FUNCHEADER, CALL, RETURNE, IFE, CONDITIONOPERATOR1, CONDITIONOPERATOR2,
 OPERATOR, PARAMDECL, PRINTE, BLOCK, FORE, UNARYE, ASSIGNE, NOTE, LOGICALOPERATOR};
@@ -29,6 +30,12 @@ struct node{
     struct token *token;
     struct node_list *children;
     int parent_is_call;
+};
+
+struct string_list{
+    tree_node node;
+    string_glob next;
+    int value;
 };
 
 struct node_list{
@@ -50,7 +57,10 @@ struct element_table{
     int has_been_passed; 
     int line;  
     int column;   
-    int variable_value;
+    char variable_value;
+    char previous_variable_value;
+    int was_used_assembly;
+    
 
     param first_param;
     elem_table next;
@@ -77,4 +87,7 @@ tab createAllTables(tree_list root);
 void checkParams(tab root);
 void printTables(tab root);
 void createAstAnotated( tree_list root, tab table, int error);
-void createAssembly(tree_list root);
+void createAssembly(tree_list root, string_glob string_root);
+string_glob globalStrings(tree_list root, string_glob string_list_root, int first_time);
+void printStrings(string_glob string_list_root);
+void printGlobals(tab global_table);
