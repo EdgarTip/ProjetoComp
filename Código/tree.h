@@ -60,6 +60,7 @@ struct element_table{
     char variable_value;
     char previous_variable_value;
     int was_used_assembly;
+    int is_global;
     
 
     param first_param;
