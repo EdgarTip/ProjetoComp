@@ -1376,6 +1376,10 @@ void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob str
                     }
                     break;
                 }
+                case BOOLE:
+                {
+                    if(strcmp)
+                }
                 default:
                 {
                     break;
@@ -1523,10 +1527,10 @@ void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob str
                 printf("mul i32 ");
             }
             else if(strcmp(root->node->token->symbol, "Div") == 0){
-                printf("div i32 ");
+                printf("sdiv i32 ");
                 }
             else if(strcmp(root->node->token->symbol, "Mod") == 0){
-                printf("mod i32 ");
+                printf("srem i32 ");
             }
             
 
