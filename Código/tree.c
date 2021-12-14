@@ -5,6 +5,7 @@
 tab root_table = NULL;
 int first_time_int = 1;
 int first_time_float = 1;
+int first_time_assign = 0;
 //--Tree--
 
 //Creates a token
@@ -99,8 +100,6 @@ int number_of_children(tree_list node){
     return counter;
 }
 
-
-
 //Adds a new child to the tree
 void addChild(tree_list root, tree_list new_child){
 
@@ -121,7 +120,6 @@ void addChild(tree_list root, tree_list new_child){
     }
 }
 
-
 void addChildStart(tree_list root, tree_list new_child){
     if(new_child == NULL){
         return;
@@ -138,7 +136,6 @@ void addChildStart(tree_list root, tree_list new_child){
     }
 }
 
-
 void add_child_to_all(tree_list root, tree_list child){
     if(root == NULL || child == NULL){
         return;
@@ -153,7 +150,6 @@ void add_child_to_all(tree_list root, tree_list child){
 
     }
 }
-
 
 //Frees the resources allocated during the creation of the program
 void freeTree(tree_list root){
@@ -193,7 +189,6 @@ output:
 ..3
 */
 
-
 char * lowerString(char *string){
 
     char *lower = calloc(strlen(string)+1, sizeof(char));
@@ -207,7 +202,6 @@ char * lowerString(char *string){
         return lower;
         
 }
-
 
 void printParams(param params){
     param aux2 = params;
@@ -241,7 +235,6 @@ void printParamsWithAssembly(tab table, param params){
     }
     return;
 }
-
 
 void printTree(tree_list list, int depth, int semantic){
     for(int i = 0; i < depth; i++){
@@ -345,7 +338,6 @@ void printTree(tree_list list, int depth, int semantic){
 
 }
 
-
 //--Semantic Tables--
 int checkExists(tab table, char* name){
     elem_table aux = table->first_elem;
@@ -407,7 +399,6 @@ void printElems(elem_table element){
 
 }
 
-
 void checkParams(tab root) {
 
     if(root == NULL) return;
@@ -427,7 +418,6 @@ void checkParams(tab root) {
     checkParams(root->next);
     return;
 }
-
 
 void printTables(tab root){
     if(root == NULL) return;
@@ -465,7 +455,6 @@ param addParameter( param root,param new_param){
     return root;
 }
 
-
 param createParam(char *value){
     param parameter = (struct parameter *) malloc(sizeof(struct parameter));
 
@@ -474,8 +463,6 @@ param createParam(char *value){
 
     return parameter; 
 }
-
-
 
 //Insert a new element to a table
 void insertElementTable(tab table, elem_table element){
@@ -513,12 +500,11 @@ elem_table createElem(char *value,  char *type, param parameter, int is_param, i
     elem->variable_value = 0;
     elem->was_used_assembly = 0;
     elem->previous_variable_value = 0;
+    elem->is_global = 0;
 
   
     return elem;
 }
-
-
 
 //Create a new table. If it is the global one starts global table variable
 tab createTable(elem_table table_element, int is_global){
@@ -554,7 +540,6 @@ tab createTable(elem_table table_element, int is_global){
 
     return new_table;
 }
-
 
 //Checks for variables in function body
 void funcBodyTable(tree_list root, tab table){
@@ -606,7 +591,6 @@ void funcBodyTable(tree_list root, tab table){
     
 }
     
-
 //Creates all tables and anotaded tree (in function body)
 tab createAllTables(tree_list root){
     
@@ -731,7 +715,9 @@ tab createAllTables(tree_list root){
         
             //Insert new value into current table
             if(!checkExists(root_table, child2->node->token->symbol)){ 
-                insertElementTable(root_table, createElem(child2->node->token->symbol, child1->node->token->symbol, NULL, 0, root->node->token->line, root->node->token->column));
+                elem_table elem = createElem(child2->node->token->symbol, child1->node->token->symbol, NULL, 0, root->node->token->line, root->node->token->column);
+                elem->is_global =1;
+                insertElementTable(root_table, elem);
             }
 
             else{
@@ -780,7 +766,6 @@ elem_table findElement(tab table, char *value, int assembly){
     }
     return NULL;
 }
-
 
 //Logic for the semantic tree inside a function
 void createAstAnotatedInsideFunc(tree_list root, tab table, int error){
@@ -1244,7 +1229,6 @@ void createAstAnotatedInsideFunc(tree_list root, tab table, int error){
 
 }
 
-
 void createAstAnotated( tree_list root, tab table, int error){
     if(root == NULL) return;
     switch(root->node->class){
@@ -1324,13 +1308,15 @@ void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob str
             elem_table elem = findElement(current_table, child->node->token->symbol, 1);
 
             if(elem != NULL){
-                elem->variable_value = 49 + current_table->current_index_variables;
                 current_table->current_index_variables++;
+                elem->variable_value = 48 + current_table->current_index_variables;
+                
             }
             else{
                 printf("BUG!\n");
             }
             after_assign = 0;
+            first_time_assign = 0;
             break;
         }
 
@@ -1396,6 +1382,7 @@ void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob str
                 }
             }
             after_assign = 0;
+            first_time_assign = 0;
             break;
         }
 
@@ -1416,26 +1403,37 @@ void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob str
                 
             }
             after_assign = 0;
+            first_time_assign = 0;
             break;
         }
         case ASSIGNE:
         {
             tree_list id = root->node->children;
 
+            
             elem_table elem = findElement(current_table, id->node->token->symbol, 1);
             
-            if(!elem->was_used_assembly){
-                printf("%%%c = ",(char)elem->variable_value);
-                elem->was_used_assembly = 1;
+            if(elem->is_global){
+                printf("store i32 ");
             }
             else{
-                elem->previous_variable_value = elem->variable_value;
-                elem->variable_value = 49 + current_table->current_index_variables;
-                printf("%%%c = ",(char)elem->variable_value);
-                current_table->current_index_variables++;
+                if(!elem->was_used_assembly){
+                    printf("%%%c = ",(char)elem->variable_value);
+                    elem->was_used_assembly = 1;
+                }
+                else{
+                    elem->previous_variable_value = elem->variable_value;
+                    current_table->current_index_variables++;
+                    elem->variable_value = 48 + current_table->current_index_variables;
+                    printf("%%%c = ",(char)elem->variable_value);
+                    
+                }
+                
             }
-            
             after_assign = 1;
+            first_time_assign = 1;
+            
+            
             break;
         }
         case INTLITE:
@@ -1443,21 +1441,69 @@ void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob str
             if(after_assign ){
                 printf(" add i32 0, %s\n", root->node->token->symbol);
             }
+            first_time_assign = 0;
             after_assign = 0;
             break;
         }
         case IDE: 
         {
-            if(after_assign ){
+            if(!first_time_assign){
+                if(after_assign ){
+                    elem_table elem = findElement(current_table, root->node->token->symbol, 1);
+
+                    if(elem->previous_variable_value == 0){
+                        printf("add i32 0, %c\n", elem->variable_value);
+                    }
+                    else{
+                        
+                        printf("add i32 0, %c\n", elem->previous_variable_value);
+                        elem->previous_variable_value = 0;
+                    }
+                    after_assign = 0;
+                }
+            }
+            else{
                 elem_table elem = findElement(current_table, root->node->token->symbol, 1);
 
-                if(elem->previous_variable_value == 0){
-                    printf("add i32 0, %s\n", elem->variable_value);
+                if(after_assign && elem->is_global){
+                    
+                    switch(root->next->node->class){
+                        
+                        case IDE:
+                        {
+                            elem_table elem2 = findElement(current_table, root->next->node->token->symbol, 1);
+                            
+                            if(elem2->is_global){
+                                printf("%%%c, i32* @%s, align 4\n", elem2->variable_value, root->node->token->symbol);
+                            }
+                            else{
+                                printf("%%%c, i32* @%s, align 4\n", elem2->variable_value, root->node->token->symbol);
+                            }
+                          
+
+
+                            break;
+                        }
+                        case INTLITE:
+                        {
+                            printf("%s, i32* @%s, align 4\n", root->next->node->token->symbol, root->node->token->symbol);
+                            break;
+                        }
+
+                        
+                        default:
+                        {
+                            printf("NAO TRATADO!\n");
+                        }
+                    }
+                    current_table->current_index_variables++;
+                    
+                    printf("%%%d = load i32, i32* @%s, align 4\n", current_table->current_index_variables, root->node->token->symbol);
+                    
+                    elem->variable_value = 48 + current_table->current_index_variables;
+                    after_assign = 0;
                 }
-                else{
-                    printf("add i32 0, %s\n", elem->previous_variable_value);
-                    elem->previous_variable_value = 0;
-                }
+                first_time_assign = 0;
             }
             break;
         }
@@ -1486,11 +1532,19 @@ void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob str
 
             elem_table elem1 = findElement(current_table, child1->node->token->symbol, 1);
 
+
+
             if(elem1 == NULL){
                 printf("%s,", child1->node->token->symbol);
             }
             else{
-                printf("%%%c, ",(char)(elem1->variable_value));
+                if(elem1->previous_variable_value == 0){
+                    printf("%%%c, ",(char)(elem1->variable_value));
+                }
+                else{
+                    printf("%%%c, ",(char)(elem1->previous_variable_value));
+                    elem1->previous_variable_value = 0;
+                }
             }
 
             elem_table elem2 = findElement(current_table, child2->node->token->symbol, 1);
@@ -1499,10 +1553,16 @@ void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob str
                 printf("%s\n", child2->node->token->symbol);
             }
             else{
-                printf("%%%c\n",elem2->variable_value);
+                if(elem2->previous_variable_value == 0){
+                    printf("%%%c\n",elem2->variable_value);
+                }
+                else{
+                    printf("%%%c\n",(char)(elem2->previous_variable_value));
+                    elem2->previous_variable_value = 0;
+                }
             }
 
-            
+            first_time_assign = 0;
             after_assign = 0;    
             break;
         }
@@ -1525,10 +1585,6 @@ void createAssemblyInsideFunc(tree_list root, tab current_table, string_glob str
 
 
 }
-
-
-
-
 
 void createAssembly(tree_list root, string_glob string_root){
 
@@ -1597,6 +1653,7 @@ void printGlobals(tab global_table){
         aux = aux->next;
     }
 }
+
 string_glob globalStrings(tree_list root, string_glob string_list_root, int first_time){
 
         if(root == NULL) return string_list_root;
@@ -1652,7 +1709,3 @@ string_glob globalStrings(tree_list root, string_glob string_list_root, int firs
 
         return string_list_root;
 }
-
-
-
-
