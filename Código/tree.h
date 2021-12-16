@@ -64,7 +64,7 @@ struct table{
     elem_table first_elem;
 };
 
-tree_list create_node(enum class_name class,int parent_is_call, char *symbol, int line, int column, id_token tok);
+tree_list create_node(enum class_name class,int parent_is_call, char *symbol, int line, int column, id_token tok, int is_unary);
 id_token create_token(char *value, int  line, int column);
 void addChild(tree_list root, tree_list new_child);
 void freeTree(tree_list root);

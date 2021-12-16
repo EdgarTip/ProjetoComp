@@ -16,7 +16,7 @@ id_token create_token(char *value, int line, int col) {
 }
 
 //Creates a new node
-tree_list create_node(enum class_name class,int parent_is_call, char *symbol, int line, int column, id_token tok){
+tree_list create_node(enum class_name class,int parent_is_call, char *symbol, int line, int column, id_token tok, int is_unary){
 
     tree_list list = (struct node_list *)malloc(sizeof(struct node_list));
 
@@ -52,6 +52,11 @@ tree_list create_node(enum class_name class,int parent_is_call, char *symbol, in
     }
     else{
         list->node->token = tok;
+        if (is_unary) {
+            if (strcmp(tok->symbol, "Add") == 0) tok->symbol = "Plus";
+            if (strcmp(tok->symbol, "Sub") == 0) tok->symbol = "Minus";
+        }
+        
     }
 
     list->next = NULL;
@@ -145,7 +150,7 @@ void add_child_to_all(tree_list root, tree_list child){
 
     tree_list aux = root;
     while(aux != NULL){
-        tree_list aux2 = create_node(child->node->class, 0, child->node->token->symbol, 0,0, NULL);
+        tree_list aux2 = create_node(child->node->class, 0, child->node->token->symbol, 0,0, NULL, 0);
         addChildStart(aux, aux2);
         aux = aux->next;
 
