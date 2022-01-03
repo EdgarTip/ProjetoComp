@@ -32,16 +32,18 @@ struct node{
     int parent_is_call;
 };
 
+struct node_list{
+    struct node *node;
+    struct node_list *next;
+};
+
 struct string_list{
     tree_node node;
     string_glob next;
     int value;
 };
 
-struct node_list{
-    struct node *node;
-    struct node_list *next;
-};
+
 
 struct parameter{
     char *params;
@@ -57,8 +59,8 @@ struct element_table{
     int has_been_passed; 
     int line;  
     int column;   
-    char variable_value;
-    char previous_variable_value;
+    int variable_value;
+    int previous_variable_value;
     int was_used_assembly;
     int is_global;
     
@@ -85,10 +87,12 @@ void add_max_next(tree_list new_node, tree_list next_node);
 int number_of_children(tree_list node);
 void add_child_to_all(tree_list root, tree_list child);
 tab createAllTables(tree_list root);
-void checkParams(tab root);
+int checkParams(tab root);
 void printTables(tab root);
 void createAstAnotated( tree_list root, tab table, int error);
 void createAssembly(tree_list root, string_glob string_root);
 string_glob globalStrings(tree_list root, string_glob string_list_root, int first_time);
 void printStrings(string_glob string_list_root);
 void printGlobals(tab global_table);
+void freeTables(tab root);
+void freeStrings(string_glob root);

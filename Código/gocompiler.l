@@ -276,9 +276,11 @@ int main(int argc, char* argv[])
             checkParams(root_table);
             printTables(root_table); 
             printTree(start_node,0, 1);  
+            freeTables(root_table);
         }
         
         freeTree(start_node);
+        
         check2 = 0;
 
     } else if (check2) {
@@ -299,17 +301,24 @@ int main(int argc, char* argv[])
         if(!error){
             tab root_table = createAllTables(start_node);
             createAstAnotated(start_node, root_table, 1);
-            checkParams(root_table);
+            int error_occured = checkParams(root_table);
             
-            string_glob root_strings = globalStrings(start_node, NULL, 1);
-            printStrings(root_strings);
-            printGlobals(root_table);
-            createAssembly(start_node, root_strings);
+            if(!error_occured){
+                string_glob root_strings = globalStrings(start_node, NULL, 1);
+                printStrings(root_strings);
+                printGlobals(root_table);
+                createAssembly(start_node, root_strings);
+
+                freeTables(root_table);
+                freeStrings(root_strings);
+
+            }
 
 
         }
         
         freeTree(start_node);
+        
         check2 = 0;
     }
 

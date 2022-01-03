@@ -1,0 +1,29 @@
+package main; 
+
+func panda (pandi int) int{
+    return 10 * pandi;
+}
+
+func main(){
+    var panda1, panda2, panda_vermelho int;
+    var pAnDa bool;
+    var Pand2 int;
+
+    panda1 = 5;
+    panda2 = 20;
+
+    pAnDa = panda1 == panda2;
+
+    if(pAnDa){
+        panda_vermelho,_ = strconv.Atoi(os.Args[1]);
+    }else{
+        panda_vermelho = 10
+        for panda_vermelho > panda1 {
+            Pand2 = Pand2 + panda(panda_vermelho);
+            panda_vermelho = panda_vermelho-1;
+        }
+        fmt.Println("Pandas são muito fixes. Tenho esta quantidade de pandas:");
+        fmt.Println(Pand2);
+
+    }
+}
