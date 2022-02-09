@@ -19,11 +19,8 @@ For goals 2-4 use commands: lex gocompiler.l && yacc -d  gocompiler.y && clang-7
 If you want to use a test case from the tests folder use the following example command (for goal 3): ./gocompiler -s < ../Tests/(name_of_file.dgo)
 
 
+Any problem or sugestion contact: 
+Edgar Duarte <edgarduarte@student.dei.uc.pt>
+Rodrigo Ferreira <rodrigoferreira@student.dei.uc.pt>
 
 
-
-
-
-Implemented by: 
-Edgar Filipe Ferreira Duarte |
-Rodrigo Francisco Ferreira
